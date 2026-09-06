@@ -17,20 +17,50 @@ final class StatusBarController: NSObject {
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
-            if let image = NSImage(systemSymbolName: "cat.fill", accessibilityDescription: "MacKitty")?.withSymbolConfiguration(symbolConfig) {
-                image.isTemplate = true
-                button.image = image
-            } else if let fallback = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "MacKitty")?.withSymbolConfiguration(symbolConfig) {
-                fallback.isTemplate = true
-                button.image = fallback
-            }
+            button.image = trayIconImage
             button.toolTip = "MacKitty · Mac Cleaner & Monitor"
             button.target = self
             button.action = #selector(statusBarButtonClicked(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         self.statusItem = item
+    }
+
+    private var trayIconImage: NSImage {
+        let bundleCandidates = [
+            Bundle.module.url(forResource: "tray_iconTemplate", withExtension: "png"),
+            Bundle.module.url(forResource: "tray_icon", withExtension: "png"),
+            Bundle.main.url(forResource: "tray_iconTemplate", withExtension: "png"),
+            Bundle.main.url(forResource: "tray_icon", withExtension: "png"),
+            Bundle.main.resourceURL?.appendingPathComponent("tray_icon.png"),
+            Bundle.main.resourceURL?.appendingPathComponent("tray_iconTemplate.png")
+        ]
+
+        for url in bundleCandidates.compactMap({ $0 }) {
+            if let img = NSImage(contentsOf: url) {
+                img.size = NSSize(width: 18, height: 18)
+                img.isTemplate = true
+                return img
+            }
+        }
+
+        let fileCandidates = [
+            "Sources/MoleMate/tray_icon_36.png",
+            "Sources/MoleMate/tray_icon.png",
+            "tray_icon.png"
+        ]
+        for path in fileCandidates {
+            if let img = NSImage(contentsOfFile: path) {
+                img.size = NSSize(width: 18, height: 18)
+                img.isTemplate = true
+                return img
+            }
+        }
+
+        let symbolConfig = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        let fallback = NSImage(systemSymbolName: "cat.fill", accessibilityDescription: "MacKitty")?.withSymbolConfiguration(symbolConfig) ?? NSImage()
+        fallback.isTemplate = true
+        return fallback
     }
 
     private func setupPopover() {

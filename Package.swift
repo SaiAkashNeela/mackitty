@@ -17,7 +17,8 @@ let package = Package(
             resources: [
                 .copy("bg.mp4"),
                 .copy("logo.png"),
-                .copy("AppIcon.icns")
+                .copy("AppIcon.icns"),
+                .copy("tray_icon.png")
             ]
         )
     ]
