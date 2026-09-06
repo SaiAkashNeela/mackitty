@@ -1,0 +1,38 @@
+# Xcode & Swift Package Manager
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+*.xcuserstate
+xcuserdata/
+*.xcbkptlist
+*.xccheckout
+*.moved-aside
+
+# macOS app distribution and build outputs
+dist/
+outputs/
+work/
+*.app/
+*.dSYM/
+*.ipa
+*.pkg
+*.dmg
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development, IDE & memory caches
+.codebase-memory/
+*.log
+.scratch/
+scratch/
