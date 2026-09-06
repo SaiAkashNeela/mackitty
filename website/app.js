@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 8. Theme Switcher (Light / Dark Mode with Persistence)
+  // 8. Theme Switcher (Time-Aware Auto Theme + Manual Toggle with Persistence)
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
   const storedTheme = localStorage.getItem("mackitty-theme");
 
@@ -395,15 +395,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getAutoTimeTheme() {
+    // Local user time: Morning/Day (06:00 to 18:00) = light mode; Night (18:00 to 06:00) = dark mode
+    const hour = new Date().getHours();
+    return (hour >= 6 && hour < 18) ? "light" : "dark";
+  }
+
   if (storedTheme) {
     applyTheme(storedTheme);
-  } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
-    applyTheme("light");
+  } else {
+    // If no manual preference set, use user's local day/night schedule
+    applyTheme(getAutoTimeTheme());
   }
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
-      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
       const nextTheme = (currentTheme === "light") ? "dark" : "light";
       applyTheme(nextTheme);
       localStorage.setItem("mackitty-theme", nextTheme);

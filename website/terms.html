@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Terms of Service — MacKitty</title>
+  <meta name="description" content="Terms of Service for MacKitty macOS software and website. Simple, straightforward terms.">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .legal-container {
+      max-width: 780px;
+      margin: 120px auto 80px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .legal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: var(--shadow-card);
+    }
+    .legal-card h1 {
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+      color: var(--text-primary);
+    }
+    .legal-card .effective-date {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-bottom: 32px;
+      display: block;
+    }
+    .legal-section {
+      margin-bottom: 28px;
+    }
+    .legal-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 10px;
+    }
+    .legal-section p, .legal-section li {
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      margin: 0 0 12px;
+    }
+    .legal-section ul {
+      padding-left: 20px;
+      margin: 0 0 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-atmosphere"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-badge">
+        <img src="assets/logo.png" alt="MacKitty Icon" class="brand-icon">
+        <span class="brand-name">MacKitty</span>
+        <span class="brand-tag">Terms</span>
+      </a>
+
+      <div class="header-actions">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" title="Toggle Light/Dark Theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="index.html" class="btn-header-download">← Back to App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal-container">
+    <article class="legal-card">
+      <h1>Terms of Service</h1>
+      <span class="effective-date">Effective Date: September 2026 · Plain Language Terms</span>
+
+      <section class="legal-section">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By downloading, installing, or using MacKitty ("the Software") or visiting this website, you agree to these Terms of Service. If you do not agree, please do not use the Software.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>2. License Grant</h2>
+        <p>MacKitty is provided to you free of charge for personal and commercial use on macOS devices that you own or control. You may not reverse-engineer closed proprietary assets or distribute malicious repackaged binaries.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>3. Software Operation & User Responsibility</h2>
+        <p>MacKitty is a disk management tool designed to inspect and purge safe cache artifacts (such as Xcode DerivedData, build intermediate caches, and Homebrew package archives). Prior to any deletion, MacKitty presents an interactive Triage screen where you retain absolute control to select or unselect any folder. You are responsible for reviewing the items selected for purge before confirming cleanup.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>4. Disclaimer of Warranty</h2>
+        <p>The Software is provided "AS IS" and without warranty of any kind, express or implied. While MacKitty implements rigorous safety bounds (never scanning or deleting personal user documents, photos, or Git repositories), the developer shall not be liable for any indirect, incidental, or consequential damages resulting from the use of the Software.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>5. Updates & Changes</h2>
+        <p>We may update these terms or the Software from time to time. Updates will be reflected directly on this page with an updated effective date.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>6. Contact</h2>
+        <p>Questions regarding these terms may be directed to <a href="https://saiakashneela.com" style="color: var(--mac-blue);">saiakashneela.com</a>.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>© 2026 MacKitty. Plain language terms.</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

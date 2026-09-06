@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Privacy Policy — MacKitty</title>
+  <meta name="description" content="MacKitty Privacy Policy. 100% on-device operation. Zero telemetry, zero tracking, zero personal data collected or transmitted.">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .legal-container {
+      max-width: 780px;
+      margin: 120px auto 80px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .legal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: var(--shadow-card);
+    }
+    .legal-card h1 {
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+      color: var(--text-primary);
+    }
+    .legal-card .effective-date {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-bottom: 32px;
+      display: block;
+    }
+    .legal-section {
+      margin-bottom: 28px;
+    }
+    .legal-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 10px;
+    }
+    .legal-section p, .legal-section li {
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      margin: 0 0 12px;
+    }
+    .legal-section ul {
+      padding-left: 20px;
+      margin: 0 0 16px;
+    }
+    .legal-highlight {
+      background: rgba(48, 209, 88, 0.08);
+      border: 1px solid rgba(48, 209, 88, 0.25);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 20px 0;
+    }
+    .legal-highlight p {
+      margin: 0;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-atmosphere"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-badge">
+        <img src="assets/logo.png" alt="MacKitty Icon" class="brand-icon">
+        <span class="brand-name">MacKitty</span>
+        <span class="brand-tag">Privacy</span>
+      </a>
+
+      <div class="header-actions">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" title="Toggle Light/Dark Theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="index.html" class="btn-header-download">← Back to App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal-container">
+    <article class="legal-card">
+      <h1>Privacy Policy</h1>
+      <span class="effective-date">Effective Date: September 2026 · macOS Native Standard</span>
+
+      <div class="legal-highlight">
+        <p>🔒 <strong>Zero Data Collection Principle:</strong> MacKitty runs 100% locally on your Mac. We do not operate remote servers, tracking pixels, analytics daemons, or user identifiers. Your data never leaves your computer.</p>
+      </div>
+
+      <section class="legal-section">
+        <h2>1. Overview & Commitment</h2>
+        <p>MacKitty ("the App") is developed as a respectful, private system utility for macOS. We believe disk maintenance tools have zero legitimate reason to collect personal data, examine personal documents, or transmit telemetry back to remote endpoints.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>2. Data We Do Not Collect</h2>
+        <p>MacKitty does not collect, store, transmit, or sell:</p>
+        <ul>
+          <li>Personal identification information (names, emails, IP addresses).</li>
+          <li>Hardware identifiers (UDIDs, serial numbers, MAC addresses).</li>
+          <li>Usage statistics, analytics, crash logs, or telemetry.</li>
+          <li>Contents of any user files, documents, photos, or browsing activity.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>3. Local Filesystem Access</h2>
+        <p>MacKitty requests local macOS filesystem permissions solely to measure directory sizes and delete user-authorized cache files. Specifically:</p>
+        <ul>
+          <li><strong>Developer caches:</strong> <code>~/Library/Developer/Xcode/DerivedData</code> and compiler module caches.</li>
+          <li><strong>Package archives:</strong> <code>~/Library/Caches/Homebrew</code> and npm/yarn tarballs.</li>
+          <li><strong>Application temporary logs:</strong> Diagnostic crash reports and ephemeral cache directories.</li>
+        </ul>
+        <p><strong>Personal boundaries:</strong> MacKitty never reads, parses, or modifies files inside <code>~/Documents</code>, <code>~/Desktop</code>, <code>~/Pictures</code>, iCloud containers, Keychain stores, or Git repositories.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>4. Third-Party Services & Network Activity</h2>
+        <p>MacKitty includes zero third-party advertising SDKs, zero analytics libraries, and makes no network requests during scan or cleanup operations. The website is hosted statically with zero trackers or invasive tracking cookies.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>5. App Store & macOS Sandbox Compliance</h2>
+        <p>MacKitty adheres strictly to Apple's macOS App Store Review Guidelines and the macOS App Sandbox security model. All disk access respects macOS Transparency, Consent, and Control (TCC) user prompts.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>6. Contact</h2>
+        <p>If you have questions regarding this privacy policy, you can reach out via GitHub or through the developer profile at <a href="https://saiakashneela.com" style="color: var(--mac-blue);">saiakashneela.com</a>.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>© 2026 MacKitty. 100% on-device privacy.</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

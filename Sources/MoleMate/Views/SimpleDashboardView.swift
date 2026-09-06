@@ -1105,16 +1105,76 @@ private struct TriageScreen: View {
                             }
                         }
                     }
-                    .padding(.trailing, 16)
+                    .padding(.trailing, 6)
                 }
                 .scrollIndicators(.hidden)
-            }
-            .padding(.top, 20)
-            .padding(.leading, 20)
-            .padding(.bottom, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            TriageSidebar()
+                // Integrated Purge Dock on the Left
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("SELECTED FOR PURGE")
+                                .font(.system(size: 10, weight: .bold))
+                                .tracking(0.5)
+                                .foregroundStyle(.white.opacity(0.45))
+                            Text("\(model.cleanupCategories.filter(\.isSelected).count) of \(model.cleanupCategories.count) safe areas")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                        Spacer()
+                        Text(model.selectedCleanupSizeText)
+                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.95))
+                    }
+
+                    Button(action: model.primaryAction) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Clean Up — \(model.selectedCleanupSizeText)")
+                                .font(.system(size: 13.5, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(moleBlue.opacity(model.hasSelectedCleanup ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!model.hasSelectedCleanup)
+                }
+                .padding(14)
+                .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                }
+            }
+            .padding(20)
+            .frame(width: 530)
+            .background(panelBackground)
+            .overlay(alignment: .trailing) { hairline.frame(width: 1) }
+
+            // Right Stage: 100% Dedicated to Kitty on the Moon
+            VStack {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Text("✨")
+                        Text(model.hasSelectedCleanup ? "Kitty found \(model.selectedCleanupSizeText) to save!" : "No items selected")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color(red: 14/255, green: 165/255, blue: 233/255).opacity(0.20), in: Capsule())
+                    .overlay {
+                        Capsule().strokeBorder(Color(red: 56/255, green: 189/255, blue: 248/255).opacity(0.4), lineWidth: 1)
+                    }
+                    .padding(20)
+                }
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -1172,57 +1232,6 @@ private struct CleanupItemRow: View {
             .onTapGesture(perform: toggle)
             .overlay(alignment: .bottom) { hairline.frame(height: 1) }
         }
-    }
-}
-
-private struct TriageSidebar: View {
-    @EnvironmentObject private var model: DashboardModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("SELECTED")
-                .font(.system(size: 11.5, weight: .bold))
-                .tracking(0.5)
-                .foregroundStyle(.white.opacity(0.4))
-            Text(model.selectedCleanupSizeText)
-                .font(.system(size: 34, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.92))
-            Text("\(model.cleanupCategories.filter(\.isSelected).count) of \(model.cleanupCategories.count) areas")
-                .font(.system(size: 12.5))
-                .foregroundStyle(.white.opacity(0.5))
-
-            hairline.frame(height: 1)
-
-            Text("SAFE BREAKDOWN")
-                .font(.system(size: 11.5, weight: .bold))
-                .tracking(0.5)
-                .foregroundStyle(.white.opacity(0.4))
-            ForEach(Array(model.cleanupCategories.enumerated()), id: \.element.id) { index, category in
-                if category.isSelected {
-                    HStack {
-                        Circle().fill([moleBlue, .orange, .purple, .cyan, .gray][index % 5]).frame(width: 6, height: 6)
-                        Text(category.name).font(.system(size: 12)).foregroundStyle(.white.opacity(0.6))
-                        Spacer()
-                        Text(category.sizeText).font(.system(size: 12, design: .monospaced)).foregroundStyle(.white.opacity(0.45))
-                    }
-                }
-            }
-            Spacer()
-            Button(action: model.primaryAction) {
-                Text("Clean Up — \(model.selectedCleanupSizeText)")
-                    .font(.system(size: 13.5, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(moleBlue.opacity(model.hasSelectedCleanup ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(!model.hasSelectedCleanup)
-        }
-        .padding(20)
-        .frame(width: 260, alignment: .leading)
-        .background(panelBackground)
-        .overlay(alignment: .leading) { hairline.frame(width: 1) }
     }
 }
 
