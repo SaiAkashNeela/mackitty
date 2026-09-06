@@ -33,6 +33,10 @@ struct SimpleDashboardView: View {
                     .strokeBorder(Color.white.opacity(0.06))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .sheet(isPresented: $model.showScanPermissionModal) {
+                ScanPermissionModalView()
+                    .environmentObject(model)
+            }
         }
         .preferredColorScheme(.dark)
     }
@@ -359,15 +363,42 @@ private struct WelcomeScreen: View {
                 VStack(spacing: 16) {
                     DiskGauge()
 
-                    Button(action: model.primaryAction) {
-                        Text("Scan My Mac")
-                            .font(.system(size: 14, weight: .semibold))
+                    VStack(spacing: 8) {
+                        Button(action: model.primaryAction) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("Scan My Mac")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 28)
+                            .padding(.horizontal, 32)
                             .padding(.vertical, 12)
-                            .background(moleBlue, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            .background(
+                                LinearGradient(
+                                    colors: [moleBlue, Color(red: 0.15, green: 0.45, blue: 0.9)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            )
+                            .shadow(color: moleBlue.opacity(0.35), radius: 8, y: 2)
+                        }
+                        .buttonStyle(.plain)
+
+                        // Reassuring Safety Badge
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.shield.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.green)
+                            Text("No personal data or files are ever deleted")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.white.opacity(0.04), in: Capsule())
                     }
-                    .buttonStyle(.plain)
 
                     StatsStrip()
                     LifetimeStrip()
@@ -514,15 +545,15 @@ private struct NetworkStatCard: View {
     var body: some View {
         InteractiveStatCard(
             label: "NETWORK",
-            value: mode == 0 ? monitor.networkNameText : (mode == 1 ? monitor.localIPText : monitor.networkStatusText),
-            subtext: mode == 0 ? "Network" : (mode == 1 ? "Local IP" : "Status"),
+            value: mode == 0 ? (monitor.isOnline ? "Connected" : "Disconnected") : monitor.localIPText,
+            subtext: mode == 0 ? "Status" : "Local IP",
             color: monitor.isOnline ? moleGreen : .gray,
             progress: monitor.isOnline ? 1.0 : 0.0,
             isLive: monitor.isOnline,
             isHovered: isHovered,
             action: {
                 withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                    mode = (mode + 1) % 3
+                    mode = (mode + 1) % 2
                 }
                 NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
             }

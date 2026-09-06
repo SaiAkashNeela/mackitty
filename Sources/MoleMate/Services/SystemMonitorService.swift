@@ -25,9 +25,9 @@ final class SystemMonitorService: ObservableObject {
     @Published var isCharging: Bool = false
     @Published var hasBattery: Bool = true
 
-    @Published var networkStatusText: String = "Online"
+    @Published var networkStatusText: String = "Connected"
     @Published var networkInterfaceText: String = "Connected"
-    @Published var networkNameText: String = "Wi-Fi"
+    @Published var networkNameText: String = "Connected"
     @Published var localIPText: String = "Connected"
     @Published var isOnline: Bool = true
 
@@ -167,53 +167,30 @@ final class SystemMonitorService: ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.isOnline = path.status == .satisfied
-                if path.status == .satisfied {
-                    self.networkStatusText = "Online"
-                    if path.usesInterfaceType(.wifi) {
-                        self.networkInterfaceText = "Wi-Fi"
-                    } else if path.usesInterfaceType(.wiredEthernet) {
-                        self.networkInterfaceText = "Ethernet"
-                    } else if path.usesInterfaceType(.cellular) {
-                        self.networkInterfaceText = "Cellular"
-                    } else {
-                        self.networkInterfaceText = "Connected"
-                    }
-                } else {
-                    self.networkStatusText = "Offline"
-                    self.networkInterfaceText = "Disconnected"
-                }
+                let status = self.isOnline ? "Connected" : "Disconnected"
+                self.networkStatusText = status
+                self.networkNameText = status
+                self.networkInterfaceText = status
             }
         }
         pathMonitor.start(queue: monitorQueue)
     }
 
     private func sampleNetwork() {
-        var foundName: String?
-        if let iface = CWWiFiClient.shared().interface(), let ssid = iface.ssid(), !ssid.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            foundName = ssid.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        if foundName == nil || foundName?.isEmpty == true {
-            if let store = SCDynamicStoreCreate(nil, "com.mackitty.net" as CFString, nil, nil) {
-                if let ipv4 = SCDynamicStoreCopyValue(store, "State:/Network/Global/IPv4" as CFString) as? [String: Any],
-                   let serviceID = ipv4["PrimaryService"] as? String {
-                    if let service = SCDynamicStoreCopyValue(store, "Setup:/Network/Service/\(serviceID)" as CFString) as? [String: Any],
-                       let serviceName = service["UserDefinedName"] as? String, !serviceName.isEmpty {
-                        foundName = serviceName
-                    }
-                    if let serviceState = SCDynamicStoreCopyValue(store, "State:/Network/Service/\(serviceID)/IPv4" as CFString) as? [String: Any],
-                       let addrs = serviceState["Addresses"] as? [String], let first = addrs.first {
-                        localIPText = first
-                    }
+        if let store = SCDynamicStoreCreate(nil, "com.mackitty.net" as CFString, nil, nil) {
+            if let ipv4 = SCDynamicStoreCopyValue(store, "State:/Network/Global/IPv4" as CFString) as? [String: Any],
+               let serviceID = ipv4["PrimaryService"] as? String {
+                if let serviceState = SCDynamicStoreCopyValue(store, "State:/Network/Service/\(serviceID)/IPv4" as CFString) as? [String: Any],
+                   let addrs = serviceState["Addresses"] as? [String], let first = addrs.first {
+                    localIPText = first
                 }
             }
         }
 
-        if let found = foundName, !found.isEmpty {
-            networkNameText = found
-        } else {
-            networkNameText = networkInterfaceText
-        }
+        let status = isOnline ? "Connected" : "Disconnected"
+        networkStatusText = status
+        networkNameText = status
+        networkInterfaceText = status
     }
 
     private func queryChipName() -> String {

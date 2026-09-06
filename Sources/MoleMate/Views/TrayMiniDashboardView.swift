@@ -6,12 +6,12 @@ struct TrayMiniDashboardView: View {
     var onClose: () -> Void
 
     private let panelBg = Color(red: 0.08, green: 0.09, blue: 0.12)
-    private let cardBg = Color.white.opacity(0.05)
+    private let cardBg = Color.white.opacity(0.04)
     private let strokeColor = Color.white.opacity(0.08)
     private let accentBlue = Color(red: 0.22, green: 0.58, blue: 0.98)
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             // Header
             HStack(spacing: 8) {
                 AppLogoView(size: 20)
@@ -45,8 +45,8 @@ struct TrayMiniDashboardView: View {
             }
             .padding(.bottom, 2)
 
-            // 2x2 Telemetry Grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            // 2x2 Telemetry Grid (Evenly sized boxes)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                 // CPU Card
                 MiniStatCard(
                     icon: "cpu",
@@ -92,31 +92,34 @@ struct TrayMiniDashboardView: View {
                 )
             }
 
-            // Network connection row
+            // Network connection row (Even box)
             HStack(spacing: 8) {
-                Image(systemName: "wifi")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Color.green)
+                Image(systemName: model.monitor.isOnline ? "wifi" : "wifi.slash")
+                    .font(.system(size: 11))
+                    .foregroundStyle(model.monitor.isOnline ? Color.green : Color.gray)
 
-                Text(model.monitor.networkNameText)
+                Text("Network")
                     .font(.system(size: 11.5, weight: .medium))
                     .foregroundStyle(.white.opacity(0.85))
 
                 Spacer()
 
                 HStack(spacing: 4) {
-                    Circle().fill(Color.green).frame(width: 5, height: 5)
-                    Text(model.monitor.networkStatusText)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.white.opacity(0.5))
+                    Circle()
+                        .fill(model.monitor.isOnline ? Color.green : Color.gray)
+                        .frame(width: 5, height: 5)
+                    Text(model.monitor.isOnline ? "Connected" : "Disconnected")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(model.monitor.isOnline ? Color.green.opacity(0.9) : .white.opacity(0.45))
                 }
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .frame(height: 32)
             .background(cardBg, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(strokeColor) }
 
-            // Action Buttons
+            // Action Buttons (Even 50/50 boxes)
             HStack(spacing: 8) {
                 Button(action: cleanNow) {
                     HStack(spacing: 6) {
@@ -126,14 +129,14 @@ struct TrayMiniDashboardView: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 7)
+                    .frame(height: 34)
                     .background(
                         LinearGradient(
                             colors: [accentBlue, accentBlue.opacity(0.85)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
                     )
                     .foregroundStyle(.white)
                 }
@@ -143,13 +146,13 @@ struct TrayMiniDashboardView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 11, weight: .semibold))
-                        Text("Scan")
-                            .font(.system(size: 12, weight: .medium))
+                        Text("Scan System")
+                            .font(.system(size: 12, weight: .semibold))
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.12)) }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.12)) }
                     .foregroundStyle(.white.opacity(0.9))
                 }
                 .buttonStyle(.plain)
@@ -240,7 +243,7 @@ struct TrayMiniDashboardView: View {
     private func scanNow() {
         openApp()
         model.resetForFreshScan()
-        model.scan()
+        model.requestScan()
     }
 
     private func openAbout() {
@@ -273,7 +276,7 @@ private struct MiniStatCard: View {
     let progressColor: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
                 Image(systemName: icon)
                     .font(.system(size: 10, weight: .medium))
@@ -284,7 +287,8 @@ private struct MiniStatCard: View {
                 Spacer()
                 Text(value)
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .lineLimit(1)
             }
 
             // Progress bar
@@ -302,11 +306,13 @@ private struct MiniStatCard: View {
 
             Text(subtitle)
                 .font(.system(size: 9.5))
-                .foregroundStyle(.white.opacity(0.38))
+                .foregroundStyle(.white.opacity(0.4))
                 .lineLimit(1)
+                .truncationMode(.tail)
         }
-        .padding(8)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.07)) }
+        .padding(9)
+        .frame(maxWidth: .infinity, minHeight: 64, maxHeight: 64, alignment: .leading)
+        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.white.opacity(0.07)) }
     }
 }

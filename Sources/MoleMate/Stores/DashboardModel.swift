@@ -29,6 +29,7 @@ final class DashboardModel: ObservableObject {
     @Published private(set) var installedApps: [InstalledApp] = []
     @Published var activeAppWarnings: [String] = []
     @Published var showAbout: Bool = false
+    @Published var showScanPermissionModal: Bool = false
 
     let mole = MoleService()
     let monitor = SystemMonitorService()
@@ -101,14 +102,27 @@ final class DashboardModel: ObservableObject {
 
     func primaryAction() {
         switch screen {
-        case .welcome: scan()
+        case .welcome: requestScan()
         case .scanning: cancelScan()
         case .triage: if hasSelectedCleanup { clean() }
         case .cleaning: cancelCleaning()
         case .summary:
             resetForFreshScan()
-            scan()
+            requestScan()
         }
+    }
+
+    func requestScan() {
+        if UserDefaults.standard.bool(forKey: "didAcknowledgeScanPermissions") {
+            scan()
+        } else {
+            showScanPermissionModal = true
+        }
+    }
+
+    func startScanAfterPermissionPrompt() {
+        UserDefaults.standard.set(true, forKey: "didAcknowledgeScanPermissions")
+        scan()
     }
 
     func selectTopTab(_ tab: TopTab) {
