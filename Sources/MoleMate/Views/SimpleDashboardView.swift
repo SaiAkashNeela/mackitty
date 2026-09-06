@@ -431,23 +431,34 @@ private struct WelcomeScreen: View {
                     VStack(spacing: 8) {
                         Button(action: model.primaryAction) {
                             HStack(spacing: 8) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 13, weight: .semibold))
-                                Text("Scan My Mac")
+                                Image(systemName: "sparkle.magnifyingglass")
                                     .font(.system(size: 14, weight: .semibold))
+                                Text("Scan My Mac")
+                                    .font(.system(size: 14.5, weight: .semibold))
                             }
                             .foregroundStyle(.white)
                             .padding(.horizontal, 32)
                             .padding(.vertical, 12)
                             .background(
                                 LinearGradient(
-                                    colors: [moleBlue, Color(red: 0.15, green: 0.45, blue: 0.9)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                                    colors: [Color(red: 0.18, green: 0.66, blue: 1.0), Color(red: 0.05, green: 0.42, blue: 0.95)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
                                 ),
                                 in: RoundedRectangle(cornerRadius: 8, style: .continuous)
                             )
-                            .shadow(color: moleBlue.opacity(0.35), radius: 8, y: 2)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(0.40), Color.white.opacity(0.08)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
+                            .shadow(color: Color(red: 0.08, green: 0.55, blue: 1.0).opacity(0.42), radius: 12, y: 3)
                         }
                         .buttonStyle(.plain)
 
@@ -482,15 +493,45 @@ private struct WelcomeScreen: View {
 private struct DiskGauge: View {
     @EnvironmentObject private var model: DashboardModel
 
+    private var diskRingGradient: AngularGradient {
+        if model.diskUsedRatio > 0.88 {
+            return AngularGradient(
+                colors: [Color(red: 1.0, green: 0.55, blue: 0.22), Color(red: 1.0, green: 0.32, blue: 0.42), Color(red: 1.0, green: 0.55, blue: 0.22)],
+                center: .center,
+                startAngle: .degrees(-90),
+                endAngle: .degrees(270)
+            )
+        } else {
+            return AngularGradient(
+                colors: [Color(red: 0.22, green: 0.82, blue: 1.0), Color(red: 0.05, green: 0.46, blue: 0.98), Color(red: 0.22, green: 0.82, blue: 1.0)],
+                center: .center,
+                startAngle: .degrees(-90),
+                endAngle: .degrees(270)
+            )
+        }
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
                     .stroke(Color.white.opacity(0.08), lineWidth: 14)
+
+                // Soft celestial HUD glow behind active arc
                 Circle()
                     .trim(from: 0, to: model.diskUsedRatio)
-                    .stroke(moleBlue, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .stroke(
+                        model.diskUsedRatio > 0.88 ? Color.orange.opacity(0.35) : Color(red: 0.18, green: 0.75, blue: 1.0).opacity(0.28),
+                        style: StrokeStyle(lineWidth: 18, lineCap: .round)
+                    )
                     .rotationEffect(.degrees(-90))
+                    .blur(radius: 6)
+
+                Circle()
+                    .trim(from: 0, to: model.diskUsedRatio)
+                    .stroke(diskRingGradient, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+
                 VStack(spacing: 2) {
                     Text("\(Int(model.diskUsedRatio * 100))%")
                         .font(.system(size: 30, weight: .bold, design: .monospaced))

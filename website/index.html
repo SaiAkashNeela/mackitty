@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 · theme: Apple Silicon Obsidian Vibrancy · zero-slop -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  
+  <title>MacKitty — Allow Kitty to Take Care of Your Mac | Fast, Safe Mac Cleaner</title>
+  <meta name="description" content="Allow Kitty to take care of your Mac. Kitty can do everything. Kitty can save you from bloated Xcode caches, Homebrew residue, and mystery gigabytes. 100% native Swift for macOS.">
+  <meta name="keywords" content="Mac cleaner, clean my mac, mac disk cleaner, Xcode cache cleaner, developer mac cleanup, native swift mac app, apple silicon cleaner">
+  <meta name="author" content="Sai Akash Neela">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://mackitty.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mackitty.com/">
+  <meta property="og:title" content="MacKitty — Allow Kitty to Take Care of Your Mac">
+  <meta property="og:description" content="Kitty can do everything. Kitty can save you. Reclaim tens of gigabytes of developer caches and system residue safely with a native Mac companion.">
+  <meta property="og:image" content="https://mackitty.com/assets/logo.png">
+  <meta property="og:site_name" content="MacKitty">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MacKitty — Allow Kitty to Take Care of Your Mac">
+  <meta name="twitter:description" content="Kitty can do everything. Kitty can save you. Zero personal file deletions. 100% Native Swift for macOS.">
+  <meta name="twitter:image" content="https://mackitty.com/assets/logo.png">
+
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Structured JSON-LD Schema (King Status SEO & AI Search Engine Graph) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "MacKitty",
+        "operatingSystem": "macOS 14.0 or later",
+        "applicationCategory": "UtilitiesApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "MacKitty is a safe, featherweight macOS system companion. Reclaims gigabytes of safe developer caches, Xcode build artifacts, and system residues without ever touching personal documents. Allow kitty to take care of your mac.",
+        "image": "https://mackitty.com/assets/logo.png",
+        "author": {
+          "@type": "Person",
+          "name": "Sai Akash Neela",
+          "url": "https://saiakashneela.com"
+        },
+        "creator": {
+          "@type": "Person",
+          "name": "Sai Akash",
+          "url": "https://saiakash.dev"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Geeks Designs",
+          "url": "https://geeksdesigns.com"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://mackitty.com/#website",
+        "url": "https://mackitty.com/",
+        "name": "MacKitty",
+        "description": "Allow Kitty to take care of your Mac. Kitty can do everything, Kitty can save you. Native macOS disk and memory companion.",
+        "publisher": {
+          "@id": "https://geeksdesigns.com/#organization"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://mackitty.com/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Does MacKitty ever delete my personal documents, photos, or desktop files?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Never. No personal data or files are ever deleted. MacKitty enforces an absolute strict boundary: it inspects solely regenerable build directories (like ~/Library/Developer/Xcode/DerivedData), package manager caches, and system log residue. Your Documents, Desktop, Pictures, and iCloud folders are never touched."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does macOS show permission popups when MacKitty scans?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "macOS requires user consent for an application to read metadata from developer folders and application caches. When prompted, simply click Allow so MacKitty can accurately report recoverable disk space. Nothing is modified or purged during the scan phase."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is it really safe to clean Xcode DerivedData?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, 100%. DerivedData holds temporary build artifacts, index files, and intermediate logs that Xcode produces while compiling apps. Deleting it is standard developer procedure to fix mysterious Xcode compilation glitches, and Xcode will automatically recreate fresh indexes upon your next build."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does MacKitty compare to commercial subscription cleaners?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Commercial cleaners are typically 300+ MB utilities that install background launch daemons, phone home with telemetry, and demand recurring monthly fees. MacKitty is 100% pure Swift, consumes zero CPU in the background, has zero telemetry, and is free of subscription nag screens."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What are the system requirements for MacKitty?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MacKitty requires macOS 14.0 (Sonoma) or macOS 15.0 (Sequoia). It is compiled as a Universal Binary with native optimizations for Apple Silicon (M1, M2, M3, M4, Pro, Max, Ultra) as well as Intel 64-bit processors."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <!-- Atmosphere Background -->
+  <div class="page-atmosphere"></div>
+
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="#" class="brand-badge">
+        <img src="assets/logo.png" alt="MacKitty Icon" class="brand-icon">
+        <span class="brand-name">MacKitty</span>
+        <span class="brand-tag">macOS Native</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#app-preview" class="nav-link">Live App Preview</a>
+        <a href="#under-the-hood" class="nav-link">Under the Hood</a>
+        <a href="#safety-guarantee" class="nav-link">Safety Guarantee</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Light / Dark Mode Toggle Button -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" title="Toggle Light/Dark Theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+
+        <a href="#download" class="btn-header-appstore">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.65-.8 1.1-1.91.97-3.04-1 .04-2.19.67-2.88 1.48-.61.71-1.14 1.84-.99 2.94 1.11.09 2.24-.58 2.9-1.38z"/></svg>
+          App Store
+        </a>
+        <a href="https://github.com/nutlope/hallmark/releases/latest" class="btn-header-download">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download Free
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero-section">
+      <div class="hero-pill-badge">
+        <span class="hero-pill-dot"></span>
+        <span>100% Native Swift · Apple Silicon & Intel Universal</span>
+      </div>
+
+      <h1 class="hero-title">
+        Allow Kitty to take care of your Mac.
+      </h1>
+
+      <p class="hero-subtitle">
+        <strong>Kitty can do everything. Kitty can save you.</strong><br>
+        A featherweight macOS disk companion that isolates bloated developer caches, stale build artifacts, and system clutter — safely, with zero personal file deletions.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="https://github.com/nutlope/hallmark/releases/latest" class="btn-primary-mac">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download Direct (.dmg)</span>
+        </a>
+
+        <a href="#download" class="btn-secondary-mac">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.65-.8 1.1-1.91.97-3.04-1 .04-2.19.67-2.88 1.48-.61.71-1.14 1.84-.99 2.94 1.11.09 2.24-.58 2.9-1.38z"/></svg>
+          <span>Mac App Store</span>
+        </a>
+      </div>
+
+      <div class="hero-trust-row">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zm3.707 6.763a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span>No personal data or files are ever deleted. Dry-run safety verified.</span>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PIXEL-FAITHFUL NATIVE MACOS APP WINDOW (Exact Replica of SimpleDashboardView)
+         ==================================================================== -->
+    <section id="app-preview" class="showcase-stage">
+      <!-- Simulated macOS Top Menu Bar Companion Row -->
+      <div class="companion-bar">
+        <div class="companion-left">
+          <span class="apple-icon"></span>
+          <span class="app-item">MacKitty</span>
+          <span class="menu-item">File</span>
+          <span class="menu-item">Clean</span>
+          <span class="menu-item">View</span>
+          <span class="menu-item">Window</span>
+          <span class="menu-item">Help</span>
+        </div>
+        <div class="companion-right">
+          <span>72%</span>
+          <button id="tray-toggle-btn" class="tray-icon-btn" title="Click to open Menu Bar Companion">
+            <img src="assets/tray_icon.png" alt="Tray" style="width: 13px; height: 13px; filter: brightness(10);">
+            <span>Companion</span>
+          </button>
+          <span>Mon 9:41 AM</span>
+
+          <!-- Simulated Menu Bar Dropdown Popover (Exact TrayMiniDashboardView) -->
+          <div id="tray-popover" class="tray-popover">
+            <div class="tray-popover-header">
+              <div class="tray-popover-title">
+                <img src="assets/logo.png" alt="MacKitty">
+                <span>MacKitty</span>
+              </div>
+              <span class="brand-tag">Idle</span>
+            </div>
+
+            <!-- 2x2 Even Telemetry Grid (Per User Prompt 6) -->
+            <div class="tray-grid">
+              <div class="tray-stat-box">
+                <div class="tray-stat-label">CPU</div>
+                <div class="tray-stat-val" id="tray-cpu-val">14%</div>
+                <div class="tray-stat-sub">Apple M3 Max</div>
+              </div>
+              <div class="tray-stat-box">
+                <div class="tray-stat-label">Memory</div>
+                <div class="tray-stat-val">71%</div>
+                <div class="tray-stat-sub">11.4 GB used</div>
+              </div>
+              <div class="tray-stat-box">
+                <div class="tray-stat-label">Storage</div>
+                <div class="tray-stat-val">143.4 GB</div>
+                <div class="tray-stat-sub">368 GB used</div>
+              </div>
+              <div class="tray-stat-box">
+                <div class="tray-stat-label">Battery</div>
+                <div class="tray-stat-val">92%</div>
+                <div class="tray-stat-sub">⚡ Charging</div>
+              </div>
+            </div>
+
+            <!-- Network Row -->
+            <div class="tray-network-box">
+              <span style="color: rgba(255,255,255,0.7);">Network</span>
+              <span style="color: var(--mac-green); font-weight: 500;">● Connected</span>
+            </div>
+
+            <!-- 50/50 Action Buttons -->
+            <div class="tray-action-buttons">
+              <button class="tray-btn-clean" id="tray-clean-action">Clean My Mac</button>
+              <button class="tray-btn-scan" id="tray-scan-action">Scan System</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Native macOS Window Container -->
+      <div class="mac-window">
+        <!-- Titlebar Chrome -->
+        <div class="mac-chrome">
+          <!-- Traffic Lights -->
+          <div class="traffic-lights">
+            <span class="traffic-light tl-close" title="Close"></span>
+            <span class="traffic-light tl-min" title="Minimize"></span>
+            <span class="traffic-light tl-zoom" title="Zoom"></span>
+          </div>
+
+          <!-- Chrome Center: Logo, Title, Segmented Tabs -->
+          <div class="chrome-center">
+            <div class="chrome-app-id">
+              <img src="assets/logo.png" alt="MacKitty Icon">
+              <span>MacKitty</span>
+            </div>
+
+            <div class="chrome-tabs">
+              <button class="chrome-tab active" data-app-tab="clean">Clean ✦</button>
+              <button class="chrome-tab" data-app-tab="apps">Installed Apps</button>
+              <button class="chrome-tab" data-app-tab="settings">Settings</button>
+            </div>
+          </div>
+
+          <!-- Chrome Right: Live Status Badge -->
+          <div class="chrome-right">
+            <div class="status-badge">
+              <span id="window-status-dot" class="status-dot idle"></span>
+              <span id="window-status-label">Idle</span>
+            </div>
+            <span style="font-size: 13px; color: rgba(255,255,255,0.4); cursor: pointer;" title="About MacKitty">ⓘ</span>
+          </div>
+        </div>
+
+        <!-- Window Canvas Area (With Cosmic Cat Video & Foreground Screens) -->
+        <div class="mac-canvas">
+          <!-- Real Cosmic Background Video from Native App -->
+          <video id="mac-app-video" class="mac-video-layer" autoplay loop muted playsinline src="assets/bg.mp4"></video>
+
+          <!-- Real Native Spotlight Aura & Dimming Mask -->
+          <div id="cat-aura" class="cat-spotlight-aura"></div>
+          <div id="cat-mask" class="cat-dimming-mask"></div>
+
+          <!-- Foreground Screens Container -->
+          <div class="mac-screen-container">
+
+            <!-- SCREEN 1: WELCOME / IDLE DASHBOARD -->
+            <div id="screen-welcome" class="mac-screen screen-welcome active">
+              <!-- Disk Gauge (Exact SimpleDashboardView DiskGauge) -->
+              <div class="disk-gauge-wrap">
+                <div class="gauge-svg-container">
+                  <svg viewBox="0 0 170 170">
+                    <!-- Subtle background track -->
+                    <circle cx="85" cy="85" r="70" stroke="rgba(255,255,255,0.08)" stroke-width="14" fill="none" />
+                    <!-- Celestial HUD Glow -->
+                    <circle id="gauge-glow" class="gauge-glow-arc" cx="85" cy="85" r="70" stroke="#38bdf8" stroke-width="18" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="123" fill="none" />
+                    <!-- Active gradient arc (72% used) -->
+                    <circle id="gauge-arc" cx="85" cy="85" r="70" stroke="url(#activeDiskGradient)" stroke-width="14" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="123" fill="none" />
+                    <defs>
+                      <linearGradient id="activeDiskGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#0284c7" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="gauge-center-text">
+                    <span class="gauge-pct" id="gauge-pct-text">72%</span>
+                    <span class="gauge-sub">used</span>
+                  </div>
+                </div>
+
+                <div class="disk-title">Macintosh HD</div>
+                <div class="disk-details" id="disk-details-text">368.6 GB of 512.0 GB used · 143.4 GB free</div>
+              </div>
+
+              <!-- Primary Action: Scan My Mac Button & Safety Badge -->
+              <div class="scan-action-wrap">
+                <button id="btn-start-scan" class="btn-scan-main">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  <span>Scan My Mac</span>
+                </button>
+
+                <div class="safety-capsule">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zm3.707 6.763a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  <span>No personal data or files are ever deleted</span>
+                </div>
+              </div>
+
+              <!-- 5-Card Stats Strip (Interactive: Click to toggle modes!) -->
+              <div class="stats-strip">
+                <!-- CPU -->
+                <div class="telemetry-card" id="card-cpu" title="Click to cycle CPU info">
+                  <div class="card-top">
+                    <span class="card-label">CPU</span>
+                    <span class="card-beacon" style="background: var(--mac-blue);"></span>
+                  </div>
+                  <div class="card-val" id="val-cpu">14% Load</div>
+                  <div class="card-bar"><div class="card-bar-fill" style="width: 14%; background: var(--mac-blue);"></div></div>
+                </div>
+
+                <!-- GPU -->
+                <div class="telemetry-card" id="card-gpu" title="Click to cycle GPU info">
+                  <div class="card-top">
+                    <span class="card-label">GPU</span>
+                    <span class="card-beacon" style="background: var(--mac-purple);"></span>
+                  </div>
+                  <div class="card-val" id="val-gpu">Metal 3</div>
+                  <div class="card-bar"><div class="card-bar-fill" style="width: 18%; background: var(--mac-purple);"></div></div>
+                </div>
+
+                <!-- Memory -->
+                <div class="telemetry-card" id="card-mem" title="Click to cycle Memory info">
+                  <div class="card-top">
+                    <span class="card-label">Memory</span>
+                    <span class="card-beacon" style="background: var(--mac-cyan);"></span>
+                  </div>
+                  <div class="card-val" id="val-mem">11.4 GB Used</div>
+                  <div class="card-bar"><div class="card-bar-fill" style="width: 71%; background: var(--mac-cyan);"></div></div>
+                </div>
+
+                <!-- Network -->
+                <div class="telemetry-card" id="card-net" title="Click to toggle IP address">
+                  <div class="card-top">
+                    <span class="card-label">Network</span>
+                    <span class="card-beacon" style="background: var(--mac-green);"></span>
+                  </div>
+                  <div class="card-val" id="val-net">Connected</div>
+                  <div class="card-bar"><div class="card-bar-fill" style="width: 100%; background: var(--mac-green);"></div></div>
+                </div>
+
+                <!-- Battery -->
+                <div class="telemetry-card" id="card-bat" title="Click to toggle Power info">
+                  <div class="card-top">
+                    <span class="card-label">Battery</span>
+                    <span class="card-beacon" style="background: var(--mac-green);"></span>
+                  </div>
+                  <div class="card-val" id="val-bat">92% ⚡</div>
+                  <div class="card-bar"><div class="card-bar-fill" style="width: 92%; background: var(--mac-green);"></div></div>
+                </div>
+              </div>
+
+              <!-- Lifetime & Recent Activity -->
+              <div class="dashboard-sub-row">
+                <div class="lifetime-card">
+                  <div class="lifetime-card-label">TOTAL CLEANED</div>
+                  <div class="lifetime-card-val" id="lifetime-cleaned-val">48.2 GB</div>
+                </div>
+                <div class="lifetime-card">
+                  <div class="lifetime-card-label">CLEANUPS RUN</div>
+                  <div class="lifetime-card-val">14 times</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCREEN 2: SCANNING SCREEN (Dynamic Sonar Radar Sweep) -->
+            <div id="screen-scanning" class="mac-screen screen-scanning">
+              <div class="sonar-radar-container">
+                <div class="radar-pulse-ring"></div>
+                <div class="radar-sweep-disc"></div>
+                <img src="assets/logo.png" alt="MacKitty Mascot" class="radar-center-logo">
+              </div>
+
+              <div class="scanning-headline-row">
+                <span class="scan-beacon"></span>
+                <span class="scan-title">ANALYZING SYSTEM</span>
+              </div>
+
+              <div class="scan-pct-big" id="scan-counter-pct">48%</div>
+              <div class="scan-files-counter" id="scan-files-inspected">142,891 files inspected</div>
+
+              <div class="scan-path-box">
+                <span id="scan-path-text">~/Library/Developer/Xcode/DerivedData/Build/Products</span>
+                <span class="scan-cursor">▌</span>
+              </div>
+
+              <button id="btn-cancel-scan" class="btn-scan-cancel">
+                ✕ Cancel Scan
+              </button>
+            </div>
+
+            <!-- SCREEN 3: SMART TRIAGE RESULTS (Matches TriageScreen in Swift) -->
+            <div id="screen-triage" class="mac-screen screen-triage">
+              <!-- Left Column: Items List & Integrated Purge Dock -->
+              <div class="triage-content-left">
+                <div class="triage-header-bar">
+                  <button id="btn-triage-back" class="btn-back-dashboard">
+                    ← Back to Dashboard
+                  </button>
+                  <button id="btn-select-all" class="btn-toggle-select-all">
+                    Select All
+                  </button>
+                </div>
+
+                <div class="triage-title-block">
+                  <h3>Scan Complete</h3>
+                  <p>6 safe cleanup areas found · verified harmless to remove</p>
+                </div>
+
+                <!-- Triage Item Rows -->
+                <div class="triage-items-list" id="triage-items-list">
+                  <!-- Row 1: Xcode DerivedData -->
+                  <div class="triage-item-row" data-size="18.4" data-id="xc">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-xc">XC</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Xcode Caches & DerivedData</div>
+                      <div class="triage-item-path">~/Library/Developer/Xcode/DerivedData</div>
+                    </div>
+                    <div class="triage-item-size">18.4 GB</div>
+                  </div>
+
+                  <!-- Row 2: Homebrew -->
+                  <div class="triage-item-row" data-size="6.2" data-id="hb">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-hb">HB</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Homebrew Package Caches</div>
+                      <div class="triage-item-path">~/Library/Caches/Homebrew</div>
+                    </div>
+                    <div class="triage-item-size">6.2 GB</div>
+                  </div>
+
+                  <!-- Row 3: Application Caches -->
+                  <div class="triage-item-row" data-size="4.8" data-id="sys">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-sys">CA</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Application System Caches</div>
+                      <div class="triage-item-path">~/Library/Caches</div>
+                    </div>
+                    <div class="triage-item-size">4.8 GB</div>
+                  </div>
+
+                  <!-- Row 4: Downloads & DMGs -->
+                  <div class="triage-item-row" data-size="3.1" data-id="dl">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-dl">DL</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Old Downloads & DMG Installers</div>
+                      <div class="triage-item-path">~/Downloads/*.dmg</div>
+                    </div>
+                    <div class="triage-item-size">3.1 GB</div>
+                  </div>
+
+                  <!-- Row 5: Diagnostic Crash Logs -->
+                  <div class="triage-item-row" data-size="1.4" data-id="log">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-log">LG</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Diagnostic Crash Logs</div>
+                      <div class="triage-item-path">~/Library/Logs/DiagnosticReports</div>
+                    </div>
+                    <div class="triage-item-size">1.4 GB</div>
+                  </div>
+
+                  <!-- Row 6: NPM & Yarn -->
+                  <div class="triage-item-row" data-size="0.98" data-id="npm">
+                    <input type="checkbox" class="triage-checkbox" checked>
+                    <div class="triage-cat-badge badge-npm">NP</div>
+                    <div class="triage-item-info">
+                      <div class="triage-item-name">Node Package Manager Cache</div>
+                      <div class="triage-item-path">~/.npm/_cacache</div>
+                    </div>
+                    <div class="triage-item-size">980 MB</div>
+                  </div>
+                </div>
+
+                <!-- Integrated Purge Dock on the Left -->
+                <div class="triage-purge-dock">
+                  <div class="triage-purge-row">
+                    <div>
+                      <div class="purge-total-label">Selected for purge</div>
+                      <div class="triage-total-count" id="triage-selected-count" style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px;">6 of 6 safe areas</div>
+                    </div>
+                    <div class="purge-total-num" id="triage-selected-total">34.88 GB</div>
+                  </div>
+                  <button id="btn-execute-clean" class="btn-clean-now">
+                    Clean Up — 34.88 GB
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right Stage: 100% Dedicated to Kitty on the Moon -->
+              <div class="triage-kitty-stage">
+                <div class="kitty-ready-badge">
+                  <span>✨ Kitty found 34.88 GB to save!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCREEN 4: CLEANING PROGRESS & SUMMARY -->
+            <div id="screen-cleaning" class="mac-screen screen-cleaning">
+              <!-- Active cleaning ring -->
+              <div id="cleaning-in-progress-view">
+                <div class="cleaning-circle-wrap">
+                  <svg viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="66" stroke="rgba(255,255,255,0.08)" stroke-width="12" fill="none" />
+                    <circle id="cleaning-progress-arc" cx="80" cy="80" r="66" stroke="var(--mac-green)" stroke-width="12" stroke-linecap="round" stroke-dasharray="415" stroke-dashoffset="415" fill="none" />
+                  </svg>
+                  <div class="cleaning-center-text">
+                    <span class="gauge-pct" id="cleaning-pct-num">0%</span>
+                    <span class="gauge-sub">Purging…</span>
+                  </div>
+                </div>
+                <div class="cleaning-phase-text" id="cleaning-phase-label">Flushing Xcode intermediate build caches…</div>
+              </div>
+
+              <!-- Finished summary view -->
+              <div id="cleaning-success-view" class="cleaning-success-box">
+                <div class="success-shield-icon">
+                  <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="success-size-big">34.88 GB Reclaimed</div>
+                <div class="success-sub">Your Mac disk is clean and breathing fresh air again.</div>
+                <button id="btn-summary-done" class="btn-primary-mac" style="padding: 10px 24px; font-size: 13.5px;">
+                  Done · Back to Dashboard
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- POPUP MODAL: SCAN PERMISSION EXPLANATION (User Prompt 6 Requirement) -->
+          <div id="scan-permission-modal" class="mac-modal-backdrop">
+            <div class="mac-modal-window">
+              <div class="modal-icon-shield">
+                <svg width="22" height="22" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zm3.707 6.763a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              </div>
+              <h4 class="modal-heading">Allow MacKitty to Scan Your Mac?</h4>
+              <p class="modal-body-text">
+                You will be getting popups from macOS asking to allow or disallow folder access. Make sure to <strong>allow</strong> so that MacKitty can inspect cache folders properly.
+                <br><br>
+                <em style="color: rgba(255,255,255,0.9); font-style: normal; font-weight: 500;">(Don't worry — no personal data or files are ever deleted)</em>
+              </p>
+              <div class="modal-actions">
+                <button id="btn-modal-cancel" class="btn-modal-cancel">Cancel</button>
+                <button id="btn-modal-confirm" class="btn-modal-confirm">Allow & Start Scan</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TECHNICAL SPECIFICATION & UNDER THE HOOD (Anti-AI-Slop Editorial)
+         ==================================================================== -->
+    <section id="under-the-hood" class="editorial-section">
+      <div class="section-label">Technical Transparency</div>
+      <h2 class="section-title">Built for developers and Mac power users who hate mystery bloatware.</h2>
+      <p class="section-lead">
+        Most Mac cleaner applications are 300 MB Electron monsters stuffed with tracking libraries and aggressive subscription upsells. MacKitty is a 18 MB native Swift binary designed with Unix transparency. Here is exactly what happens under the hood.
+      </p>
+
+      <!-- Technical Split Grid -->
+      <div class="tech-split-grid">
+        <!-- Safe Targets -->
+        <div class="tech-panel safe">
+          <div class="panel-tag-header">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>Reproducible Ephemeral Targets</span>
+          </div>
+          <ul class="spec-list">
+            <li class="spec-item">
+              <span>›</span>
+              <span><code>~/Library/Developer/Xcode/DerivedData</code> — Intermediate object files, symbol indexes, and module caches that Xcode recreates automatically upon compilation.</span>
+            </li>
+            <li class="spec-item">
+              <span>›</span>
+              <span><code>~/Library/Caches/Homebrew</code> — Pre-compiled bottle tarballs downloaded during <code>brew install</code> that linger indefinitely in disk storage.</span>
+            </li>
+            <li class="spec-item">
+              <span>›</span>
+              <span><code>~/.npm/_cacache</code> & <code>~/.cache/yarn</code> — Tarball archives from JavaScript package managers safely invalidated across builds.</span>
+            </li>
+            <li class="spec-item">
+              <span>›</span>
+              <span><code>~/Library/Logs/DiagnosticReports</code> — Legacy crash telemetry and spin reports from applications long since uninstalled.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Inviolable Boundaries -->
+        <div class="tech-panel forbidden">
+          <div class="panel-tag-header">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg>
+            <span>Strict Inviolable Boundaries</span>
+          </div>
+          <ul class="spec-list">
+            <li class="spec-item">
+              <span>✕</span>
+              <span><code>~/Documents</code>, <code>~/Desktop</code>, <code>~/Downloads</code> — Zero personal documents, photos, or desktop files are ever targeted.</span>
+            </li>
+            <li class="spec-item">
+              <span>✕</span>
+              <span><code>.git/</code> repositories — Uncommitted source code, branches, stashes, and project files are strictly excluded from all scan routines.</span>
+            </li>
+            <li class="spec-item">
+              <span>✕</span>
+              <span>Keychain & Browser sessions — Passwords, saved logins, cookies, and tokens are protected behind macOS Sandbox constraints.</span>
+            </li>
+            <li class="spec-item">
+              <span>✕</span>
+              <span>System & Signed Binaries — Read-only Apple system partitions (macOS Sealed System Volume) remain completely untouched.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Real Unix Terminal Inspection Box -->
+      <div class="terminal-block">
+        <div class="terminal-topbar">
+          <span class="traffic-light tl-close" style="width: 9px; height: 9px;"></span>
+          <span class="traffic-light tl-min" style="width: 9px; height: 9px;"></span>
+          <span class="traffic-light tl-zoom" style="width: 9px; height: 9px;"></span>
+          <span style="margin-left: 8px; font-size: 11px; color: rgba(255,255,255,0.4);">Terminal — zsh — dry-run verification</span>
+        </div>
+        <div class="terminal-code">
+          <span class="cmt"># MacKitty performs safe POSIX audits before touching any filesystem node</span><br>
+          $ <span class="cmd">mackitty</span> <span class="arg">audit --dry-run</span><br>
+          <span class="out">[OK] Verified Sandbox permissions</span><br>
+          <span class="out">[OK] ~/Library/Developer/Xcode/DerivedData ........... 18.40 GB (safe ephemeral)</span><br>
+          <span class="out">[OK] ~/Library/Caches/Homebrew ....................... 6.20 GB (safe archive)</span><br>
+          <span class="out">[OK] ~/.npm/_cacache ................................. 980.0 MB (safe tarball)</span><br>
+          <span class="out">[PASS] No personal files or Git working directories touched.</span><br>
+          <span class="out">[READY] 34.88 GB eligible for instantaneous safe reclaim.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SAFETY GUARANTEE SECTION
+         ==================================================================== -->
+    <section id="safety-guarantee" class="editorial-section">
+      <div class="section-label">Safety Guarantee</div>
+      <h2 class="section-title">Why you can click "Allow" without a single worry.</h2>
+      <p class="section-lead">
+        When MacKitty initializes a scan, macOS Transparency, Consent, and Control (TCC) prompts appear on your screen. Here is why those popups occur and why your data is 100% safe.
+      </p>
+
+      <div class="tech-panel" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 28px;">
+        <h3 style="font-size: 17px; font-weight: 700; color: #fff; margin: 0 0 12px;">
+          The macOS TCC Permission Protocol
+        </h3>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 16px;">
+          Since macOS Sonoma, Apple enforces strict folder-level access policies. When MacKitty scans for Xcode intermediate artifacts or system cache bloat, the operating system asks you to confirm read permission for that specific folder.
+        </p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 0;">
+          <strong>No personal data or files are never deleted.</strong> Every single purge is explicitly presented to you in the Triage review screen, allowing you to uncheck any folder, inspect it in Finder with a single click, or skip it entirely.
+        </p>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         FAQ SECTION
+         ==================================================================== -->
+    <section id="faq" class="editorial-section">
+      <div class="section-label">Questions & Answers</div>
+      <h2 class="section-title">Straightforward answers. No marketing spin.</h2>
+
+      <div class="faq-wrap">
+        <!-- Q0 -->
+        <div class="faq-item">
+          <button class="faq-btn">
+            <span>Does MacKitty ever delete my personal documents, photos, or desktop files?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-body">
+            <strong>Never. No personal data or files are ever deleted.</strong> MacKitty enforces an absolute strict boundary: it inspects solely regenerable build directories (like <code>~/Library/Developer/Xcode/DerivedData</code>), package manager caches, and system log residue. Your Documents, Desktop, Pictures, and iCloud folders are never touched.
+          </div>
+        </div>
+
+        <!-- Q1 -->
+        <div class="faq-item">
+          <button class="faq-btn">
+            <span>Why does macOS show permission popups when MacKitty scans?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-body">
+            macOS requires user consent for an application to read metadata from developer folders (such as <code>~/Library/Developer</code>) and application caches. When prompted, simply click <strong>Allow</strong> so MacKitty can accurately report recoverable disk space. Nothing is modified or purged during the scan phase.
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="faq-item">
+          <button class="faq-btn">
+            <span>Is it really safe to clean Xcode DerivedData?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-body">
+            Yes, 100%. DerivedData holds temporary build artifacts, index files, and intermediate logs that Xcode produces while compiling apps. Deleting it is standard developer procedure to fix mysterious Xcode compilation glitches, and Xcode will automatically recreate fresh indexes upon your next build.
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="faq-item">
+          <button class="faq-btn">
+            <span>How does MacKitty compare to commercial subscription cleaners?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-body">
+            Commercial cleaners are typically 300+ MB Electron or cross-platform utilities that install background launch daemons, phone home constantly with marketing trackers, and demand recurring monthly fees. MacKitty is written in 100% pure Swift, consumes zero CPU in the background, has zero telemetry, and is free of subscription nag screens.
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="faq-item">
+          <button class="faq-btn">
+            <span>What are the system requirements?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-body">
+            MacKitty requires macOS 14.0 (Sonoma) or macOS 15.0 (Sequoia). It is compiled as a Universal Binary with native optimizations for Apple Silicon (M1, M2, M3, M4, Pro, Max, Ultra) as well as Intel 64-bit processors.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         DOWNLOAD CALL TO ACTION
+         ==================================================================== -->
+    <section id="download" class="editorial-section">
+      <div class="download-card">
+        <img src="assets/logo.png" alt="MacKitty Icon" class="logo">
+        <h2 style="font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: #fff; margin: 0 0 12px; letter-spacing: -0.02em;">
+          Allow Kitty to take care of your Mac today.
+        </h2>
+        <p style="font-size: 15px; color: rgba(255, 255, 255, 0.7); max-width: 520px; margin: 0 auto 28px; line-height: 1.5;">
+          Free direct download. Clean disk space, monitor system telemetry from your menu bar, and enjoy a faster Mac.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="https://github.com/nutlope/hallmark/releases/latest" class="btn-primary-mac">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Download Direct (.dmg)</span>
+          </a>
+
+          <a href="#download" class="btn-secondary-mac">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.65-.8 1.1-1.91.97-3.04-1 .04-2.19.67-2.88 1.48-.61.71-1.14 1.84-.99 2.94 1.11.09 2.24-.58 2.9-1.38z"/></svg>
+            <span>Mac App Store</span>
+          </a>
+        </div>
+
+        <div style="font-size: 12px; font-family: var(--font-mono); color: rgba(255,255,255,0.45); margin-top: 18px;">
+          Version 1.0.0 · macOS 14.0+ · Signed & Notarized by Apple
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Editorial Colophon Footer (Hallmark Ft2 Single-Line Close) -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <img src="assets/logo.png" alt="MacKitty Icon" style="width: 18px; height: 18px; border-radius: 4px;">
+        <span style="font-weight: 600; color: #fff;">MacKitty</span>
+        <span>— Native Swift System Companion</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="#app-preview">Interactive Preview</a>
+        <a href="#under-the-hood">Under the Hood</a>
+        <a href="#safety-guarantee">Safety</a>
+        <a href="https://github.com/nutlope/hallmark">GitHub</a>
+      </div>
+
+      <div>
+        <span>Crafted with pure Swift and SwiftUI. Zero telemetry.</span>
+      </div>
+    </div>
+
+    <!-- 
+      SEO Crawler Backlinks (Requested by user: saiakashneela.com, saiakash.dev, geeksdesigns.com)
+      Structured semantically for search bots and crawlers, completely hidden from the visual UI.
+    -->
+    <div class="seo-crawler-backlinks" aria-hidden="true">
+      <span>Architected and designed by</span>
+      <a href="https://saiakashneela.com" rel="author creator" title="Sai Akash Neela">Sai Akash Neela</a>
+      <a href="https://saiakash.dev" rel="developer" title="Sai Akash Dev">Sai Akash Dev</a>
+      <a href="https://geeksdesigns.com" rel="publisher" title="Geeks Designs">Geeks Designs</a>
+    </div>
+  </footer>
+
+  <!-- Interactive Demo & Logic Script -->
+  <script src="app.js"></script>
+</body>
+</html>

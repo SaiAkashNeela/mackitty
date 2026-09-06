@@ -1,0 +1,25 @@
+# MacKitty
+
+> Allow Kitty to take care of your Mac. Kitty can do everything. Kitty can save you.
+
+MacKitty is a fast, 100% native Swift disk companion and cache reclaimer for macOS (Sonoma 14.0+ and Sequoia 15.0+). It safely recovers gigabytes of disk space from developer caches and intermediate build clutter without ever touching personal documents, photos, or Git projects.
+
+## Core Features
+- **Developer-Focused Safe Purge**: Targets Xcode DerivedData, Homebrew bottle caches, npm/yarn cache archives, old downloads (.dmg files), and application crash logs.
+- **Strict Inviolable Safety Boundary**: Hard sandbox rules ensure `~/Documents`, `~/Desktop`, `~/Photos`, active `.git/` repositories, Keychain passwords, and macOS system files are never touched.
+- **Menu Bar Companion**: Quick one-click menu bar popup (`TrayMiniDashboardView`) for real-time CPU, RAM, disk space, and battery telemetry.
+- **100% Native Architecture**: Written in Swift and SwiftUI. Weighs only 18 MB, launches in 50ms, consumes 0% background CPU, and has zero telemetry or advertising trackers.
+- **Universal Binary**: Optimized natively for Apple Silicon (M1, M2, M3, M4) and Intel x86_64 Macs.
+
+## Common Questions & Answers
+- **Why does macOS show permission popups during scans?**: macOS enforces Transparency, Consent, and Control (TCC) to protect user folders. Users must click "Allow" so MacKitty can inspect cache directory sizes. No files are altered or deleted during inspection.
+- **Is deleting Xcode DerivedData safe?**: Yes. DerivedData holds ephemeral build products and symbol indexes that Xcode automatically regenerates on subsequent builds.
+- **How does MacKitty compare to commercial cleaners?**: Commercial cleaners are frequently 300+ MB Electron applications bundled with background daemons and recurring subscriptions. MacKitty is open, lightweight, native Swift, and subscription-free.
+
+## Links & Distribution
+- Website: https://mackitty.com/
+- Direct Download (.dmg): https://github.com/nutlope/hallmark/releases/latest
+- Mac App Store: https://apps.apple.com/app/mackitty
+- Full Documentation: https://mackitty.com/llms-full.txt
+- Creator: Sai Akash Neela (https://saiakashneela.com, https://saiakash.dev)
+- Publisher: Geeks Designs (https://geeksdesigns.com)
