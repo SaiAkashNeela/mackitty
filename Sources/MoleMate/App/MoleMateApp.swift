@@ -16,6 +16,13 @@ struct MacKittyApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1120, height: 720)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About MacKitty") {
+                    AboutWindowController.shared.show()
+                }
+            }
+        }
 
         Settings {
             SettingsView()
@@ -33,6 +40,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let icon = AppLogo.nsImage {
             NSApp.applicationIconImage = icon
         }
+        setupAppMenu()
+    }
+
+    private func setupAppMenu() {
+        // Intercept standard AppKit "About MacKitty" menu item next to the Apple logo
+        DispatchQueue.main.async {
+            if let mainMenu = NSApp.mainMenu,
+               let appMenu = mainMenu.items.first?.submenu {
+                for item in appMenu.items {
+                    if item.action == #selector(NSApplication.orderFrontStandardAboutPanel(_:)) ||
+                       item.title.localizedCaseInsensitiveContains("About") {
+                        item.target = self
+                        item.action = #selector(self.openAboutMacKitty)
+                    }
+                }
+            }
+        }
+    }
+
+    @objc func openAboutMacKitty() {
+        AboutWindowController.shared.show()
     }
 
     func setupStatusBar(with model: DashboardModel) {

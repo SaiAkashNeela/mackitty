@@ -23,17 +23,20 @@ struct AppLogoView: View {
     var size: CGFloat = 28
     var cornerRadius: CGFloat? = nil
 
-    private var effectiveCornerRadius: CGFloat {
-        cornerRadius ?? (size * 0.224)
-    }
-
     var body: some View {
         if let image = AppLogo.nsImage {
-            Image(nsImage: image)
-                .resizable()
-                .scaledToFit()
-                .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: effectiveCornerRadius, style: .continuous))
+            if let cornerRadius = cornerRadius {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            } else {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: size, height: size)
+            }
         } else {
             Image(systemName: "sparkles")
                 .resizable()

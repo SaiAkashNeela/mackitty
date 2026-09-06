@@ -110,12 +110,17 @@ private struct HTMLChrome: View {
 
             Spacer()
             HStack(spacing: 12) {
-                HStack(spacing: 7) {
-                    AppLogoView(size: 16)
-                    Text("MacKitty")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.76))
+                Button(action: { model.showAbout = true }) {
+                    HStack(spacing: 7) {
+                        AppLogoView(size: 16)
+                        Text("MacKitty")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
                 }
+                .buttonStyle(.plain)
+                .help("About MacKitty")
+
                 HStack(spacing: 3) {
                     ForEach(TopTab.allCases, id: \.self) { tab in
                         Button(action: { model.selectTopTab(tab) }) {
@@ -149,22 +154,50 @@ private struct HTMLChrome: View {
             }
             Spacer()
 
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 6, height: 6)
-                Text(statusLabel)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.6))
+            HStack(spacing: 8) {
+                if model.updater.isUpdateAvailable {
+                    Button(action: { model.updater.openDownloadPage() }) {
+                        HStack(spacing: 4) {
+                            Circle().fill(Color.yellow).frame(width: 5, height: 5)
+                            Text("Update v\(model.updater.latestVersion)")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Color.yellow)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3.5)
+                        .background(Color.yellow.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button(action: { model.showAbout = true }) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.45))
+                }
+                .buttonStyle(.plain)
+                .help("About MacKitty")
+
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 6, height: 6)
+                    Text(statusLabel)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .padding(.horizontal, 14)
         .frame(height: 38)
         .background(Color.black.opacity(0.12))
         .overlay(alignment: .bottom) { hairline.frame(height: 1) }
+        .sheet(isPresented: $model.showAbout) {
+            AboutView()
+        }
     }
 
     private var statusLabel: String {
@@ -663,32 +696,148 @@ private struct RecentActivity: View {
 
 private struct ScanningScreen: View {
     @EnvironmentObject private var model: DashboardModel
+    @State private var radarAngle: Double = 0
+    @State private var pulseScale: CGFloat = 1.0
+    @State private var pulseOpacity: Double = 0.5
+    @State private var cursorVisible = true
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 24) {
             Spacer()
-            ProgressRing(progress: model.scanProgress, color: moleBlue, size: 56, lineWidth: 4)
-            Text("\(Int(model.scanProgress * 100))%")
-                .font(.system(size: 34, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.92))
-            VStack(spacing: 6) {
-                Text("\(model.scanFilesInspected.formatted()) files inspected")
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.55))
-                Text(model.scanCurrentPath)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.35))
-                    .lineLimit(1)
-                    .frame(maxWidth: 430)
+
+            // Dynamic Interactive Radar & Sonar Scanning Visual
+            ZStack {
+                // Outer subtle sonar ripples (never looks frozen)
+                Circle()
+                    .stroke(moleBlue.opacity(0.12), lineWidth: 1.5)
+                    .frame(width: 140, height: 140)
+                    .scaleEffect(pulseScale)
+                    .opacity(pulseOpacity)
+
+                Circle()
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    .frame(width: 110, height: 110)
+
+                // Background track
+                Circle()
+                    .stroke(Color.white.opacity(0.08), lineWidth: 5)
+                    .frame(width: 90, height: 90)
+
+                // Progress ring track
+                Circle()
+                    .trim(from: 0, to: max(0.04, model.scanProgress))
+                    .stroke(
+                        LinearGradient(
+                            colors: [moleBlue, Color.cyan],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 90, height: 90)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: model.scanProgress)
+
+                // Continuous rotating radar sweep
+                Circle()
+                    .fill(
+                        AngularGradient(
+                            gradient: Gradient(colors: [
+                                moleBlue.opacity(0),
+                                moleBlue.opacity(0.03),
+                                moleBlue.opacity(0.25),
+                                moleBlue.opacity(0.55)
+                            ]),
+                            center: .center
+                        )
+                    )
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(radarAngle))
+
+                // Center logo emblem
+                AppLogoView(size: 34)
+                    .shadow(color: moleBlue.opacity(0.5), radius: 8, y: 0)
             }
-            Button("Cancel") { model.cancelScan() }
-                .font(.system(size: 13, weight: .medium))
+            .onAppear {
+                withAnimation(.linear(duration: 1.8).repeatForever(autoreverses: false)) {
+                    radarAngle = 360
+                }
+                withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+                    pulseScale = 1.15
+                    pulseOpacity = 0.15
+                }
+            }
+
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: .green.opacity(0.8), radius: 4)
+
+                    Text("ANALYZING SYSTEM")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .tracking(1.2)
+                }
+
+                Text("\(Int(model.scanProgress * 100))%")
+                    .font(.system(size: 36, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.95))
+            }
+
+            VStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "folder.badge.gearshape")
+                        .font(.system(size: 12))
+                        .foregroundStyle(moleBlue)
+                    Text("\(model.scanFilesInspected.formatted()) files inspected")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+
+                // Interactive lively path box with terminal cursor
+                HStack(spacing: 4) {
+                    Text(model.scanCurrentPath)
+                        .font(.system(size: 11.5, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+
+                    Text("▌")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(moleBlue.opacity(cursorVisible ? 0.9 : 0.1))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08))
+                }
+                .frame(maxWidth: 440)
+                .onAppear {
+                    Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                        cursorVisible.toggle()
+                    }
+                }
+            }
+
+            Button(action: { model.cancelScan() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("Cancel Scan")
+                }
+                .font(.system(size: 12.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.85))
-                .padding(.horizontal, 22)
-                .padding(.vertical, 9)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
                 .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.12)) }
-                .buttonStyle(.plain)
+            }
+            .buttonStyle(.plain)
+
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -719,7 +868,7 @@ private struct TriageScreen: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Scan Complete")
@@ -738,6 +887,52 @@ private struct TriageScreen: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.trailing, 20)
+
+                // Active App Warnings (e.g., Firefox or Chrome is open and locking files)
+                if !model.activeAppWarnings.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.orange)
+
+                            Text("Active Application Notice (\(model.activeAppWarnings.count))")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.92))
+
+                            Spacer()
+
+                            Button("Re-check") {
+                                model.checkRunningAppWarnings()
+                            }
+                            .font(.system(size: 10.5, weight: .medium))
+                            .foregroundStyle(Color.orange)
+                            .buttonStyle(.plain)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(model.activeAppWarnings, id: \.self) { warning in
+                                HStack(alignment: .top, spacing: 6) {
+                                    Circle()
+                                        .fill(Color.orange.opacity(0.85))
+                                        .frame(width: 4, height: 4)
+                                        .padding(.top, 5)
+                                    Text(warning)
+                                        .font(.system(size: 11.5))
+                                        .foregroundStyle(Color.white.opacity(0.82))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(Color.orange.opacity(0.25), lineWidth: 1)
+                    }
+                    .padding(.trailing, 20)
+                }
 
                 ScrollView {
                     VStack(spacing: 0) {

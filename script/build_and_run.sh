@@ -40,6 +40,10 @@ if [ -f "$ROOT_DIR/Sources/MoleMate/AppIcon.icns" ]; then
   cp "$ROOT_DIR/Sources/MoleMate/AppIcon.icns" "$APP_CONTENTS/Resources/AppIcon.icns"
 fi
 
+if [ -f "$ROOT_DIR/Sources/MoleMate/logo.png" ]; then
+  cp "$ROOT_DIR/Sources/MoleMate/logo.png" "$APP_CONTENTS/Resources/logo.png"
+fi
+
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

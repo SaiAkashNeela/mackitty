@@ -2,14 +2,16 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class StatusBarController: NSObject, NSMenuDelegate {
+final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem?
+    private var popover: NSPopover?
     private weak var model: DashboardModel?
 
     init(model: DashboardModel) {
         self.model = model
         super.init()
         setupStatusItem()
+        setupPopover()
     }
 
     private func setupStatusItem() {
@@ -24,157 +26,115 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 button.image = fallback
             }
             button.toolTip = "MacKitty · Mac Cleaner & Monitor"
+            button.target = self
+            button.action = #selector(statusBarButtonClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
-
-        let menu = NSMenu()
-        menu.delegate = self
-        item.menu = menu
         self.statusItem = item
     }
 
-    // MARK: - NSMenuDelegate (Dynamic updates on every click)
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
+    private func setupPopover() {
         guard let model else { return }
+        let pop = NSPopover()
+        pop.behavior = .transient
+        pop.animates = true
+        pop.appearance = NSAppearance(named: .darkAqua)
 
-        // 1. Header with live status
-        let headerItem = NSMenuItem(title: "MacKitty", action: #selector(openApp), keyEquivalent: "")
-        headerItem.target = self
-        if let icon = NSImage(systemSymbolName: "cat.fill", accessibilityDescription: nil) {
-            icon.isTemplate = true
-            headerItem.image = icon
+        let view = TrayMiniDashboardView(model: model, onClose: { [weak self] in
+            self?.closePopover()
+        })
+        let hostingController = NSHostingController(rootView: view)
+        pop.contentViewController = hostingController
+        self.popover = pop
+    }
+
+    @objc private func statusBarButtonClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else {
+            togglePopover(sender)
+            return
         }
-        menu.addItem(headerItem)
 
-        let statusSubtitle = NSMenuItem(
-            title: "RAM: \(model.monitor.memoryUsedText) · Disk Free: \(model.diskFreeText)",
-            action: nil,
-            keyEquivalent: ""
-        )
-        statusSubtitle.isEnabled = false
-        menu.addItem(statusSubtitle)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 2. Simple Tasks / Quick Actions
-        let cleanItem = NSMenuItem(title: "Clean My Mac Now", action: #selector(cleanNow), keyEquivalent: "c")
-        cleanItem.keyEquivalentModifierMask = [.command, .shift]
-        cleanItem.target = self
-        if let img = NSImage(systemSymbolName: "trash.fill", accessibilityDescription: nil) {
-            img.isTemplate = true
-            cleanItem.image = img
-        }
-        menu.addItem(cleanItem)
-
-        let scanItem = NSMenuItem(title: "Analyze / Scan System", action: #selector(analyzeSystem), keyEquivalent: "s")
-        scanItem.keyEquivalentModifierMask = [.command, .shift]
-        scanItem.target = self
-        if let img = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil) {
-            img.isTemplate = true
-            scanItem.image = img
-        }
-        menu.addItem(scanItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 3. Live System Telemetry
-        let statsHeader = NSMenuItem(title: "LIVE SYSTEM STATS", action: nil, keyEquivalent: "")
-        statsHeader.isEnabled = false
-        menu.addItem(statsHeader)
-
-        let cpuItem = NSMenuItem(
-            title: "CPU: \(model.monitor.cpuText) (\(model.monitor.chipName))",
-            action: nil,
-            keyEquivalent: ""
-        )
-        if let img = NSImage(systemSymbolName: "cpu", accessibilityDescription: nil) {
-            img.isTemplate = true
-            cpuItem.image = img
-        }
-        menu.addItem(cpuItem)
-
-        let totalRAM = ByteCountFormatter.string(fromByteCount: Int64(model.monitor.memoryTotalBytes), countStyle: .memory)
-        let memItem = NSMenuItem(
-            title: "Memory: \(model.monitor.memoryUsedText) of \(totalRAM) (\(model.monitor.memoryPercentText))",
-            action: nil,
-            keyEquivalent: ""
-        )
-        if let img = NSImage(systemSymbolName: "memorychip", accessibilityDescription: nil) {
-            img.isTemplate = true
-            memItem.image = img
-        }
-        menu.addItem(memItem)
-
-        let batteryItem = NSMenuItem(
-            title: "Battery: \(model.monitor.batteryText) · \(model.monitor.batterySourceText)",
-            action: nil,
-            keyEquivalent: ""
-        )
-        if let img = NSImage(systemSymbolName: model.monitor.isCharging ? "bolt.battery.fill" : "battery.75", accessibilityDescription: nil) {
-            img.isTemplate = true
-            batteryItem.image = img
-        }
-        menu.addItem(batteryItem)
-
-        let networkItem = NSMenuItem(
-            title: "Network: \(model.monitor.networkNameText) (\(model.monitor.networkStatusText))",
-            action: nil,
-            keyEquivalent: ""
-        )
-        if let img = NSImage(systemSymbolName: "wifi", accessibilityDescription: nil) {
-            img.isTemplate = true
-            networkItem.image = img
-        }
-        menu.addItem(networkItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 4. Previous Runs / History
-        let historyHeader = NSMenuItem(title: "PREVIOUS RUNS", action: nil, keyEquivalent: "")
-        historyHeader.isEnabled = false
-        menu.addItem(historyHeader)
-
-        if model.history.isEmpty {
-            let emptyHistory = NSMenuItem(title: "No cleanups yet · Ready to scan", action: nil, keyEquivalent: "")
-            emptyHistory.isEnabled = false
-            menu.addItem(emptyHistory)
+        if event.type == .rightMouseUp {
+            popover?.performClose(nil)
+            showContextMenu(sender)
         } else {
-            if let first = model.history.first {
-                let lastRun = NSMenuItem(title: "Last: \(first.sizeText) cleaned (\(first.dayText))", action: nil, keyEquivalent: "")
-                if let img = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil) {
-                    img.isTemplate = true
-                    lastRun.image = img
-                }
-                menu.addItem(lastRun)
-            }
-            let totalFormatted = ByteCountFormatter.string(fromByteCount: model.totalCleanedBytes, countStyle: .file)
-            let totalItem = NSMenuItem(
-                title: "Total Freed: \(totalFormatted) across \(model.history.count) run\(model.history.count == 1 ? "" : "s")",
-                action: nil,
-                keyEquivalent: ""
-            )
-            menu.addItem(totalItem)
+            togglePopover(sender)
         }
+    }
 
-        menu.addItem(NSMenuItem.separator())
+    private func togglePopover(_ sender: NSStatusBarButton) {
+        guard let popover else { return }
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+        }
+    }
 
-        // 5. App Controls
+    func closePopover() {
+        popover?.performClose(nil)
+    }
+
+    private func showContextMenu(_ sender: NSStatusBarButton) {
+        let menu = NSMenu()
+
         let openItem = NSMenuItem(title: "Open MacKitty", action: #selector(openApp), keyEquivalent: "o")
         openItem.target = self
         menu.addItem(openItem)
 
+        let cleanItem = NSMenuItem(title: "Clean My Mac Now", action: #selector(cleanNow), keyEquivalent: "c")
+        cleanItem.target = self
+        menu.addItem(cleanItem)
+
+        let scanItem = NSMenuItem(title: "Scan System", action: #selector(analyzeSystem), keyEquivalent: "s")
+        scanItem.target = self
+        menu.addItem(scanItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        if let model = model, model.updater.isUpdateAvailable {
+            let updateItem = NSMenuItem(
+                title: "🚀 Update Available (v\(model.updater.latestVersion))",
+                action: #selector(openUpdate),
+                keyEquivalent: "u"
+            )
+            updateItem.target = self
+            menu.addItem(updateItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
+        let aboutItem = NSMenuItem(title: "About MacKitty…", action: #selector(openAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
         let quitItem = NSMenuItem(title: "Quit MacKitty", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil
     }
 
     // MARK: - Actions
     @objc private func openApp() {
+        closePopover()
         NSApp.activate(ignoringOtherApps: true)
         if let window = NSApp.windows.first(where: { $0.title == "MacKitty" || $0.canBecomeMain }) {
             window.makeKeyAndOrderFront(nil)
             window.deminiaturize(nil)
         }
+    }
+
+    @objc private func openUpdate() {
+        closePopover()
+        model?.updater.openDownloadPage()
+    }
+
+    @objc private func openAbout() {
+        openApp()
+        model?.showAbout = true
     }
 
     @objc private func cleanNow() {
@@ -190,6 +150,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func quitApp() {
+        closePopover()
         NSApp.terminate(nil)
     }
 }
