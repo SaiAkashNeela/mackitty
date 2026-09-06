@@ -11,15 +11,51 @@ private let hairline = Color.white.opacity(0.08)
 struct SimpleDashboardView: View {
     @EnvironmentObject private var model: DashboardModel
 
+    private var isResultsScreen: Bool {
+        model.screen == .triage || model.screen == .cleaning || model.screen == .summary
+    }
+
+    private var catSpotlightCenter: UnitPoint {
+        isResultsScreen ? UnitPoint(x: 0.82, y: 0.70) : UnitPoint(x: 0.18, y: 0.70)
+    }
+
     var body: some View {
         ZStack {
             Color(red: 0.06, green: 0.06, blue: 0.07)
                 .ignoresSafeArea()
-            BackgroundVideoView()
+            BackgroundVideoView(isFlipped: isResultsScreen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
-            Color.black.opacity(0.48)
-                .ignoresSafeArea()
+
+            // Kitty highlight aura (gentle ambient illumination)
+            RadialGradient(
+                colors: [
+                    Color(red: 0.35, green: 0.65, blue: 1.0).opacity(0.20),
+                    Color(red: 0.15, green: 0.35, blue: 0.9).opacity(0.06),
+                    Color.clear
+                ],
+                center: catSpotlightCenter,
+                startRadius: 20,
+                endRadius: 220
+            )
+            .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.4), value: isResultsScreen)
+
+            // Dimming mask that leaves only the cat part highlighted while dimming the rest of the video
+            RadialGradient(
+                stops: [
+                    .init(color: Color.clear, location: 0.0),
+                    .init(color: Color.clear, location: 0.16),
+                    .init(color: Color.black.opacity(0.35), location: 0.28),
+                    .init(color: Color.black.opacity(0.72), location: 0.45),
+                    .init(color: Color.black.opacity(0.86), location: 0.68),
+                ],
+                center: catSpotlightCenter,
+                startRadius: 30,
+                endRadius: 750
+            )
+            .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.4), value: isResultsScreen)
 
             VStack(spacing: 0) {
                 HTMLChrome()
@@ -43,8 +79,16 @@ struct SimpleDashboardView: View {
 }
 
 private struct BackgroundVideoView: NSViewRepresentable {
+    let isFlipped: Bool
+
     final class VideoSurface: NSView {
         let playerLayer: AVPlayerLayer
+        var isFlippedHorizontally: Bool = false {
+            didSet {
+                guard oldValue != isFlippedHorizontally else { return }
+                applyTransform(animated: true)
+            }
+        }
 
         init(player: AVPlayer) {
             playerLayer = AVPlayerLayer(player: player)
@@ -58,7 +102,24 @@ private struct BackgroundVideoView: NSViewRepresentable {
 
         override func layout() {
             super.layout()
-            playerLayer.frame = bounds
+            playerLayer.bounds = bounds
+            playerLayer.position = CGPoint(x: bounds.midX, y: bounds.midY)
+            applyTransform(animated: false)
+        }
+
+        private func applyTransform(animated: Bool) {
+            if animated {
+                CATransaction.begin()
+                CATransaction.setAnimationDuration(0.4)
+            }
+            if isFlippedHorizontally {
+                playerLayer.transform = CATransform3DMakeScale(-1, 1, 1)
+            } else {
+                playerLayer.transform = CATransform3DIdentity
+            }
+            if animated {
+                CATransaction.commit()
+            }
         }
     }
 
@@ -81,6 +142,7 @@ private struct BackgroundVideoView: NSViewRepresentable {
         context.coordinator.player = player
         context.coordinator.looper = AVPlayerLooper(player: player, templateItem: item)
         let view = VideoSurface(player: player)
+        view.isFlippedHorizontally = isFlipped
         player.play()
         return view
     }
@@ -88,6 +150,9 @@ private struct BackgroundVideoView: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {
         context.coordinator.player?.isMuted = true
         context.coordinator.player?.volume = 0
+        if let surface = nsView as? VideoSurface {
+            surface.isFlippedHorizontally = isFlipped
+        }
         if context.coordinator.player?.rate == 0 { context.coordinator.player?.play() }
     }
 
@@ -899,23 +964,49 @@ private struct TriageScreen: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Scan Complete")
-                            .font(.system(size: 19, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.92))
-                        Text("\(model.cleanupCategories.count) safe cleanup areas found")
-                            .font(.system(size: 12.5, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.5))
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center) {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            model.screen = .welcome
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 11, weight: .bold))
+                            Text("Back to Dashboard")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .help("Return to main dashboard")
+
                     Spacer()
+
                     Button(model.hasSelectedCleanup ? "Clear All" : "Select All") {
                         model.hasSelectedCleanup ? model.clearCleanupAreas() : model.selectAllCleanupAreas()
                     }
                     .font(.system(size: 12.5))
                     .foregroundStyle(moleBlue)
                     .buttonStyle(.plain)
+                }
+                .padding(.trailing, 20)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Scan Complete")
+                        .font(.system(size: 19, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.92))
+                    Text("\(model.cleanupCategories.count) safe cleanup areas found")
+                        .font(.system(size: 12.5, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
                 }
                 .padding(.trailing, 20)
 

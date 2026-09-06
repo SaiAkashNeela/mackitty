@@ -127,6 +127,9 @@ final class DashboardModel: ObservableObject {
 
     func selectTopTab(_ tab: TopTab) {
         topTab = tab
+        if tab == .clean && (screen == .triage || screen == .summary) {
+            screen = .welcome
+        }
         if tab == .apps { refreshInstalledApps() }
     }
 
