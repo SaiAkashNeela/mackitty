@@ -36,7 +36,7 @@ final class DashboardModel: ObservableObject {
     let mole = MoleService()
     let nativeCleaner = NativeCleanerService()
     let monitor = SystemMonitorService()
-    let updater = UpdateCheckerService()
+    var updater = UpdateCheckerService()
     private var scanTask: Task<Void, Never>?
     private var tickerTask: Task<Void, Never>?
     private var didCancelScan = false

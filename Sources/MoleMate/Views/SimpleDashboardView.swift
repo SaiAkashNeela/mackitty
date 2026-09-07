@@ -173,14 +173,21 @@ private struct BackgroundVideoView: NSViewRepresentable {
 private struct HTMLChrome: View {
     @EnvironmentObject private var model: DashboardModel
 
+    private var targetWindow: NSWindow? {
+        NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.canBecomeMain })
+    }
+
     var body: some View {
         HStack {
             HStack(spacing: 7) {
-                WindowControl(symbol: "xmark", color: Color(red: 1, green: 0.37, blue: 0.34), label: "Close") {
-                    NSApp.keyWindow?.performClose(nil)
+                WindowControl(symbol: "xmark", color: Color(red: 1, green: 0.37, blue: 0.34), label: "Close (⌘W)") {
+                    targetWindow?.close()
                 }
-                WindowControl(symbol: "minus", color: Color(red: 1, green: 0.74, blue: 0.18), label: "Minimize") {
-                    NSApp.keyWindow?.performMiniaturize(nil)
+                WindowControl(symbol: "minus", color: Color(red: 1, green: 0.74, blue: 0.18), label: "Minimize (⌘M)") {
+                    targetWindow?.miniaturize(nil)
+                }
+                WindowControl(symbol: "arrow.up.left.and.arrow.down.right", color: Color(red: 0.19, green: 0.82, blue: 0.35), label: "Zoom") {
+                    targetWindow?.zoom(nil)
                 }
             }
 
@@ -232,7 +239,7 @@ private struct HTMLChrome: View {
 
             HStack(spacing: 8) {
                 if model.updater.isUpdateAvailable {
-                    Button(action: { model.updater.openDownloadPage() }) {
+                    Button(action: { model.updater.openUpdateFlow() }) {
                         HStack(spacing: 5) {
                             Circle()
                                 .fill(Color(red: 0.19, green: 0.82, blue: 0.35))
@@ -250,7 +257,7 @@ private struct HTMLChrome: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .help("Download MacKitty v\(model.updater.latestVersion)")
+                    .help("Update to MacKitty v\(model.updater.latestVersion)")
                 }
 
                 Button(action: { model.showAbout = true }) {
@@ -280,6 +287,9 @@ private struct HTMLChrome: View {
         .overlay(alignment: .bottom) { hairline.frame(height: 1) }
         .sheet(isPresented: $model.showAbout) {
             AboutView()
+        }
+        .sheet(isPresented: $model.updater.showUpdateModal) {
+            UpdateModalView(updater: model.updater)
         }
     }
 
@@ -441,7 +451,7 @@ private struct WelcomeScreen: View {
             ScrollView {
                 VStack(spacing: 16) {
                     if model.updater.isUpdateAvailable {
-                        Button(action: { model.updater.openDownloadPage() }) {
+                        Button(action: { model.updater.openUpdateFlow() }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "arrow.down.circle.fill")
                                     .font(.system(size: 18))
@@ -450,15 +460,15 @@ private struct WelcomeScreen: View {
                                     Text("Update Available: MacKitty v\(model.updater.latestVersion)")
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundStyle(.white)
-                                    Text("A newer release is ready. Click to download the update.")
+                                    Text("A newer release is ready. Click for seamless one-click in-place update.")
                                         .font(.system(size: 11.5))
                                         .foregroundStyle(.white.opacity(0.65))
                                 }
                                 Spacer()
                                 HStack(spacing: 4) {
-                                    Text("Get Update")
+                                    Text("Update Now")
                                         .font(.system(size: 12, weight: .bold))
-                                    Image(systemName: "arrow.up.right")
+                                    Image(systemName: "sparkles")
                                         .font(.system(size: 10, weight: .bold))
                                 }
                                 .foregroundStyle(.white)

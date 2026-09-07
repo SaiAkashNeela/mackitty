@@ -41,8 +41,7 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
         window.standardWindowButton(.zoomButton)?.isHidden = true
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.styleMask.insert(.fullSizeContentView)
-        window.styleMask.remove(.titled)
+        window.styleMask.insert([.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView])
         window.isMovableByWindowBackground = true
         window.isOpaque = false
         window.backgroundColor = .clear

@@ -159,7 +159,8 @@ final class StatusBarController: NSObject {
 
     @objc private func openUpdate() {
         closePopover()
-        model?.updater.openDownloadPage()
+        openApp()
+        model?.updater.openUpdateFlow()
     }
 
     @objc private func openAbout() {

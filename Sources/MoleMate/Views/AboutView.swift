@@ -76,7 +76,7 @@ struct AboutView: View {
                 Spacer()
 
                 if updater.isUpdateAvailable {
-                    Button("Update") { updater.openDownloadPage() }
+                    Button("Update Now") { updater.openUpdateFlow() }
                         .font(.system(size: 11.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -109,9 +109,13 @@ struct AboutView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(.white.opacity(0.25))
         }
-        .padding(24)
-        .frame(width: 380)
-        .background(Color(red: 0.12, green: 0.12, blue: 0.13))
+        .padding(28)
+        .frame(width: 440)
+        .background(Color(red: 0.11, green: 0.12, blue: 0.15))
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $updater.showUpdateModal) {
+            UpdateModalView(updater: updater)
+        }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)

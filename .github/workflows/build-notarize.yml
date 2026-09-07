@@ -287,17 +287,25 @@ jobs:
           xcrun stapler staple "dist/MacKitty.dmg"
           spctl --assess --type open --context context:primary-signature --verbose=4 "dist/MacKitty.dmg"
 
+          # Also package signed/notarized MacKitty.app into MacKitty.zip for seamless in-app self-updating
+          echo "Packaging MacKitty.zip for in-app background auto-updater..."
+          ditto -c -k --keepParent "dist/MacKitty.app" "dist/MacKitty.zip"
+
       - name: Upload DMG Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MacKitty-Universal-DMG
-          path: dist/MacKitty.dmg
+          path: |
+            dist/MacKitty.dmg
+            dist/MacKitty.zip
 
       - name: Publish or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.versioning.outputs.TAG }}
           name: MacKitty ${{ steps.versioning.outputs.TAG }}
-          files: dist/MacKitty.dmg
+          files: |
+            dist/MacKitty.dmg
+            dist/MacKitty.zip
           generate_release_notes: true
           make_latest: true
