@@ -45,6 +45,14 @@ jobs:
       - name: Select Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
+      - name: Cache Swift Build Artifacts
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-universal-${{ hashFiles('Package.swift', 'Sources/**') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-universal-
+
       - name: Build Universal Release Binary (arm64 + x86_64)
         run: |
           swift build -c release --arch arm64 --arch x86_64
