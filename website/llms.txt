@@ -18,8 +18,8 @@ MacKitty is a fast, 100% native Swift disk companion and cache reclaimer for mac
 
 ## Links & Distribution
 - Website: https://mackitty.com/
-- Direct Download (.dmg): https://github.com/nutlope/hallmark/releases/latest
-- Mac App Store: https://apps.apple.com/app/mackitty
-- Full Documentation: https://mackitty.com/llms-full.txt
-- Creator: Sai Akash Neela (https://saiakashneela.com, https://saiakash.dev)
+- GitHub Repository: https://github.com/SaiAkashNeela/mackitty
+- Direct Download (.dmg): https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg
+- Releases: https://github.com/SaiAkashNeela/mackitty/releases
+- Creator: Sai Akash Neela (https://saiakashneela.com, https://saiakash.dev, https://github.com/SaiAkashNeela)
 - Publisher: Geeks Designs (https://geeksdesigns.com)

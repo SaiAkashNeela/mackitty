@@ -27,7 +27,7 @@ final class UpdateCheckerService: ObservableObject {
         }
 
         // Check remote endpoint
-        let endpoint = URL(string: "https://mackitty.com/api/version.json") ?? URL(string: "https://api.github.com/repos/mackitty/mackitty/releases/latest")!
+        let endpoint = URL(string: "https://mackitty.com/api/version.json") ?? URL(string: "https://api.github.com/repos/SaiAkashNeela/mackitty/releases/latest")!
         var request = URLRequest(url: endpoint)
         request.timeoutInterval = 4.0
         request.cachePolicy = .reloadIgnoringLocalCacheData
