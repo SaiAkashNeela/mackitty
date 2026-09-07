@@ -41,6 +41,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.applicationIconImage = icon
         }
         setupAppMenu()
+        checkMoveToApplicationsIfNeeded()
+    }
+
+    private func checkMoveToApplicationsIfNeeded() {
+        let bundlePath = Bundle.main.bundlePath
+        // Only prompt if running from a mounted DMG volume or Downloads folder
+        guard !bundlePath.hasPrefix("/Applications"),
+              bundlePath.hasPrefix("/Volumes/") || bundlePath.contains("/Downloads/") else {
+            return
+        }
+
+        #if DEBUG
+        guard !bundlePath.contains(".build/") else { return }
+        #endif
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            let alert = NSAlert()
+            alert.messageText = "Move to Applications Folder?"
+            alert.informativeText = "MacKitty is currently running from a disk image or download folder. Moving it to /Applications ensures automatic updates and full system integration."
+            alert.addButton(withTitle: "Move to Applications")
+            alert.addButton(withTitle: "Do Not Move")
+            alert.alertStyle = .informational
+
+            if alert.runModal() == .alertFirstButtonReturn {
+                let destinationURL = URL(fileURLWithPath: "/Applications/MacKitty.app")
+                let sourceURL = Bundle.main.bundleURL
+
+                do {
+                    if FileManager.default.fileExists(atPath: destinationURL.path) {
+                        try FileManager.default.removeItem(at: destinationURL)
+                    }
+                    try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+
+                    NSWorkspace.shared.openApplication(at: destinationURL, configuration: NSWorkspace.OpenConfiguration()) { _, _ in
+                        DispatchQueue.main.async {
+                            NSApp.terminate(nil)
+                        }
+                    }
+                } catch {
+                    let errAlert = NSAlert(error: error)
+                    errAlert.runModal()
+                }
+            }
+        }
     }
 
     private func setupAppMenu() {
