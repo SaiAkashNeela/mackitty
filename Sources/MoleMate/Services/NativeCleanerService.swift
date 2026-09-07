@@ -131,7 +131,7 @@ final class NativeCleanerService: @unchecked Sendable {
     }
 
     /// Scan all known targets and return populated categories with real disk sizes
-    func scanAllTargets(onProgress: @escaping (String, String) -> Void) async -> NativeScanResult {
+    func scanAllTargets(onProgress: @escaping (String, String, Int) -> Void = { _, _, _ in }) async -> NativeScanResult {
         var categories: [CleanupCategory] = []
         var totalBytes: Int64 = 0
         var totalItems: Int = 0
@@ -139,9 +139,12 @@ final class NativeCleanerService: @unchecked Sendable {
         for target in targets {
             let url = resolveURL(for: target.relativePath)
             let displayPath = "~/" + target.relativePath
-            onProgress(target.name, displayPath)
+            onProgress(target.name, displayPath, totalItems)
 
             let (bytes, count) = calculateDirectoryMetrics(at: url, excluding: target.excludedSubpaths)
+            totalBytes += bytes
+            totalItems += count
+            onProgress(target.name, displayPath, totalItems)
 
             let formattedCount = count > 0 ? NumberFormatter.localizedString(from: NSNumber(value: count), number: .decimal) : "0"
 

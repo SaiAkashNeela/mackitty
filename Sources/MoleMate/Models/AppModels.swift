@@ -82,13 +82,8 @@ struct ScanReport {
     var scannedAt: Date?
     var status: String
 
-    static let sample = ScanReport(
-        metrics: [
-            ScanMetric(title: "Junk Files", value: "3.4 GB", detail: "Can be cleaned", icon: "trash.fill", tint: .coral),
-            ScanMetric(title: "Large Files", value: "12.8 GB", detail: "Found (23 files)", icon: "doc.fill", tint: .blue),
-            ScanMetric(title: "Duplicates", value: "1.1 GB", detail: "Found (184 files)", icon: "square.on.square.fill", tint: .violet),
-            ScanMetric(title: "Unused Apps", value: "6", detail: "Not used in 6+ months", icon: "shippingbox.fill", tint: .mint)
-        ],
+    static let empty = ScanReport(
+        metrics: [],
         scannedAt: nil,
         status: "Ready for a fresh scan"
     )
@@ -113,16 +108,6 @@ struct CleanupCategory: Identifiable {
     var sizeText: String {
         ByteCountFormatter.string(fromByteCount: sizeBytes, countStyle: .file)
     }
-
-    static let sample = [
-        CleanupCategory(id: "application-cache", name: "User App Cache", detail: "Temporary files created by apps", path: "~/Library/Caches", items: "1,420", sizeBytes: 896_400_000, icon: "shippingbox", isSelected: false),
-        CleanupCategory(id: "logs", name: "User App Logs", detail: "System and app log files", path: "~/Library/Logs", items: "1,932", sizeBytes: 512_800_000, icon: "doc.text", isSelected: false),
-        CleanupCategory(id: "app-store-cache", name: "App Store Cache", detail: "Temporary App Store data", path: "~/Library/Caches/com.apple.appstore", items: "248", sizeBytes: 248_500_000, icon: "bag", isSelected: false),
-        CleanupCategory(id: "safari-cache", name: "Safari Cache", detail: "Rebuildable browser cache", path: "~/Library/Caches/com.apple.Safari", items: "642", sizeBytes: 642_000_000, icon: "safari", isSelected: false),
-        CleanupCategory(id: "chrome-cache", name: "Chrome Cache", detail: "Rebuildable browser cache", path: "~/Library/Caches/Google/Chrome", items: "1,256", sizeBytes: 1_200_000_000, icon: "globe", isSelected: false),
-        CleanupCategory(id: "npm-cache", name: "npm Cache", detail: "Rebuildable developer cache", path: "~/.npm", items: "—", sizeBytes: 420_000_000, icon: "chevron.left.forwardslash.chevron.right", isSelected: false),
-        CleanupCategory(id: "xcode-data", name: "Xcode Derived Data", detail: "Rebuildable build artifacts", path: "~/Library/Developer/Xcode/DerivedData", items: "5", sizeBytes: 2_100_000_000, icon: "hammer", isSelected: false)
-    ]
 }
 
 struct CleanupHistoryEntry: Identifiable, Codable {

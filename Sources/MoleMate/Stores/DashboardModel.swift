@@ -1,11 +1,12 @@
 import Foundation
 import AppKit
+import Combine
 
 @MainActor
 final class DashboardModel: ObservableObject {
     @Published var selectedSection: AppSection = .home
     @Published var topTab: TopTab = .clean
-    @Published var report = ScanReport.sample
+    @Published var report = ScanReport.empty
     @Published var screen: DashboardScreen = .welcome
     @Published var isScanning = false
     @Published var isCleaning = false
@@ -40,6 +41,7 @@ final class DashboardModel: ObservableObject {
     private var tickerTask: Task<Void, Never>?
     private var didCancelScan = false
     private var didCancelCleaning = false
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         if let data = UserDefaults.standard.data(forKey: "cleanup-history"),
@@ -49,6 +51,14 @@ final class DashboardModel: ObservableObject {
         refreshDiskStats()
         refreshInstalledApps()
         refreshVersion()
+
+        // Forward updater changes so SwiftUI re-renders in-app update banners reactively
+        updater.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     func checkFirstRunMolePrompt() {
@@ -186,31 +196,6 @@ final class DashboardModel: ObservableObject {
 
         checkRunningAppWarnings()
 
-        // Active ticker so the UI never feels frozen while traversing disk
-        tickerTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            let simulatedPaths = [
-                "~/Library/Caches/com.apple.Safari",
-                "~/Library/Caches/Google/Chrome",
-                "~/Library/Caches/org.mozilla.firefox",
-                "~/Library/Developer/Xcode/DerivedData",
-                "~/.npm/_cacache",
-                "~/Library/Logs",
-                "~/Library/Caches"
-            ]
-            var pathIdx = 0
-            while self.isScanning && !self.didCancelScan {
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                guard self.isScanning && !self.didCancelScan else { break }
-                self.scanFilesInspected += Int.random(in: 15...45)
-                self.scanCurrentPath = simulatedPaths[pathIdx % simulatedPaths.count]
-                pathIdx += 1
-                if self.scanProgress < 0.88 {
-                    self.scanProgress = min(self.scanProgress + 0.025, 0.88)
-                }
-            }
-        }
-
         scanTask = Task { [weak self] in
             guard let self else { return }
             if self.mole.isAvailable {
@@ -228,20 +213,20 @@ final class DashboardModel: ObservableObject {
                         screen = .welcome
                         scanPhase = "Scan stopped"
                         scanProgress = 0
-                        tickerTask?.cancel()
                         return
                     }
                     lastOperationOutput = error.localizedDescription
                 }
             }
 
-            // Always scan real targets to populate cleanupCategories with real sizes
-            let scanResult = await self.nativeCleaner.scanAllTargets { [weak self] name, path in
+            // Always scan real targets to populate cleanupCategories with real sizes and real file counts
+            let scanResult = await self.nativeCleaner.scanAllTargets { [weak self] name, path, countSoFar in
                 Task { @MainActor [weak self] in
                     guard let self else { return }
-                    self.scanPhase = "Scanning \(name)…"
+                    self.scanPhase = "Inspecting \(name)…"
                     self.scanCurrentPath = path
-                    self.scanFilesInspected += 18
+                    self.scanFilesInspected = countSoFar
+                    self.scanProgress = min(0.15 + (Double(countSoFar) / 1000.0) * 0.75, 0.95)
                 }
             }
             if didCancelScan { return }
@@ -253,10 +238,8 @@ final class DashboardModel: ObservableObject {
                 ScanMetric(title: "Engine", value: self.mole.isAvailable ? "Mole + Native" : "Native", detail: self.mole.isAvailable ? "Mole CLI active" : "Swift safe engine", icon: "bolt.fill", tint: .mint),
                 ScanMetric(title: "Safety Level", value: "100%", detail: "Zero personal data", icon: "shield.fill", tint: .violet)
             ]
-            self.scanFilesInspected = max(self.scanFilesInspected, scanResult.totalItems)
+            self.scanFilesInspected = scanResult.totalItems
 
-            tickerTask?.cancel()
-            tickerTask = nil
             if didCancelScan { return }
             report.scannedAt = Date()
             report.status = "Scan complete · review safe cleanup areas"
@@ -273,8 +256,6 @@ final class DashboardModel: ObservableObject {
     func cancelScan() {
         guard isScanning else { return }
         didCancelScan = true
-        tickerTask?.cancel()
-        tickerTask = nil
         scanTask?.cancel()
         mole.cancelCurrentOperation()
         isScanning = false
@@ -372,7 +353,7 @@ final class DashboardModel: ObservableObject {
             }
 
             // 3. Immediately re-scan real targets so the UI reflects real zeroed/reduced disk sizes
-            let rescanResult = await self.nativeCleaner.scanAllTargets { _, _ in }
+            let rescanResult = await self.nativeCleaner.scanAllTargets()
             self.cleanupCategories = rescanResult.categories
 
             self.didClean = true

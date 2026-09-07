@@ -233,17 +233,24 @@ private struct HTMLChrome: View {
             HStack(spacing: 8) {
                 if model.updater.isUpdateAvailable {
                     Button(action: { model.updater.openDownloadPage() }) {
-                        HStack(spacing: 4) {
-                            Circle().fill(Color.yellow).frame(width: 5, height: 5)
+                        HStack(spacing: 5) {
+                            Circle()
+                                .fill(Color(red: 0.19, green: 0.82, blue: 0.35))
+                                .frame(width: 6, height: 6)
                             Text("Update v\(model.updater.latestVersion)")
                                 .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.yellow)
+                                .foregroundStyle(.white)
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3.5)
-                        .background(Color.yellow.opacity(0.12), in: Capsule())
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Color.green.opacity(0.18), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .strokeBorder(Color.green.opacity(0.38), lineWidth: 1)
+                        }
                     }
                     .buttonStyle(.plain)
+                    .help("Download MacKitty v\(model.updater.latestVersion)")
                 }
 
                 Button(action: { model.showAbout = true }) {
@@ -433,6 +440,42 @@ private struct WelcomeScreen: View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(spacing: 16) {
+                    if model.updater.isUpdateAvailable {
+                        Button(action: { model.updater.openDownloadPage() }) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(moleGreen)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Update Available: MacKitty v\(model.updater.latestVersion)")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                    Text("A newer release is ready. Click to download the update.")
+                                        .font(.system(size: 11.5))
+                                        .foregroundStyle(.white.opacity(0.65))
+                                }
+                                Spacer()
+                                HStack(spacing: 4) {
+                                    Text("Get Update")
+                                        .font(.system(size: 12, weight: .bold))
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 10, weight: .bold))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(moleGreen.opacity(0.85), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            }
+                            .padding(12)
+                            .background(Color(red: 0.19, green: 0.82, blue: 0.35).opacity(0.10), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(Color(red: 0.19, green: 0.82, blue: 0.35).opacity(0.28), lineWidth: 1)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     DiskGauge()
 
                     VStack(spacing: 8) {
