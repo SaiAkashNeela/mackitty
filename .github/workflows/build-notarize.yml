@@ -50,17 +50,36 @@ jobs:
       - name: Determine Version
         id: versioning
         run: |
+          git fetch --tags --force 2>/dev/null || true
+
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             VER="${GITHUB_REF_NAME#v}"
             TAG="${GITHUB_REF_NAME}"
           else
-            VER=$(cat VERSION 2>/dev/null || echo "1.0.0")
-            VER=$(echo "$VER" | tr -d '[:space:]')
+            BASE_VER=$(cat VERSION 2>/dev/null || echo "1.0.0")
+            BASE_VER=$(echo "$BASE_VER" | tr -d '[:space:]')
+
+            # If tag for base version already exists in git, auto-increment patch based on commits ahead
+            if git rev-parse "v$BASE_VER" >/dev/null 2>&1; then
+              MAJOR_MINOR=$(echo "$BASE_VER" | awk -F. '{print $1"."$2}')
+              COMMITS_AHEAD=$(git rev-list --count "v$BASE_VER"..HEAD 2>/dev/null || echo "0")
+              if [ "$COMMITS_AHEAD" -gt 0 ]; then
+                PATCH=$((COMMITS_AHEAD))
+                VER="${MAJOR_MINOR}.${PATCH}"
+              else
+                VER="$BASE_VER"
+              fi
+            else
+              VER="$BASE_VER"
+            fi
             TAG="v$VER"
           fi
+
+          BUILD_NUM=$(git rev-list --count HEAD 2>/dev/null || echo "1")
           echo "VERSION=$VER" >> $GITHUB_OUTPUT
+          echo "BUILD_NUM=$BUILD_NUM" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
-          echo "Building MacKitty version $VER (tag: $TAG)"
+          echo "Building MacKitty version $VER (build: $BUILD_NUM, tag: $TAG)"
 
       - name: Select Xcode Version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
@@ -87,6 +106,7 @@ jobs:
           MACOS_DIR="$CONTENTS_DIR/MacOS"
           RESOURCES_DIR="$CONTENTS_DIR/Resources"
           VER="${{ steps.versioning.outputs.VERSION }}"
+          BUILD_NUM="${{ steps.versioning.outputs.BUILD_NUM }}"
 
           rm -rf dist && mkdir -p dist
           mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
@@ -132,7 +152,7 @@ jobs:
             <key>CFBundleShortVersionString</key>
             <string>$VER</string>
             <key>CFBundleVersion</key>
-            <string>$VER</string>
+            <string>$BUILD_NUM</string>
             <key>LSMinimumSystemVersion</key>
             <string>14.0</string>
             <key>LSUIElement</key>
