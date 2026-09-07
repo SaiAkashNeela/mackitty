@@ -9,6 +9,7 @@ xcuserdata/
 *.xcbkptlist
 *.xccheckout
 *.moved-aside
+.env
 
 # macOS app distribution and build outputs
 dist/
