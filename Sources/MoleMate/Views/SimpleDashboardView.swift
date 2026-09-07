@@ -173,23 +173,11 @@ private struct BackgroundVideoView: NSViewRepresentable {
 private struct HTMLChrome: View {
     @EnvironmentObject private var model: DashboardModel
 
-    private var targetWindow: NSWindow? {
-        NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.canBecomeMain })
-    }
-
     var body: some View {
         HStack {
-            HStack(spacing: 7) {
-                WindowControl(symbol: "xmark", color: Color(red: 1, green: 0.37, blue: 0.34), label: "Close (⌘W)") {
-                    targetWindow?.close()
-                }
-                WindowControl(symbol: "minus", color: Color(red: 1, green: 0.74, blue: 0.18), label: "Minimize (⌘M)") {
-                    targetWindow?.miniaturize(nil)
-                }
-                WindowControl(symbol: "arrow.up.left.and.arrow.down.right", color: Color(red: 0.19, green: 0.82, blue: 0.35), label: "Zoom") {
-                    targetWindow?.zoom(nil)
-                }
-            }
+            // Reserve natural spacing for Apple's authentic native traffic lights
+            Color.clear
+                .frame(width: 70, height: 16)
 
             Spacer()
             HStack(spacing: 12) {
@@ -313,32 +301,6 @@ private struct HTMLChrome: View {
     }
 }
 
-private struct WindowControl: View {
-    let symbol: String
-    let color: Color
-    let label: String
-    let action: () -> Void
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(isHovered ? 0.38 : 0.16))
-                Circle()
-                    .strokeBorder(color.opacity(isHovered ? 0.80 : 0.40), lineWidth: 1)
-                Image(systemName: symbol)
-                    .font(.system(size: 6, weight: .bold))
-                    .foregroundStyle(color.opacity(isHovered ? 1.0 : 0.72))
-            }
-            .frame(width: 13, height: 13)
-        }
-        .buttonStyle(.plain)
-        .help(label)
-        .onHover { isHovered = $0 }
-        .accessibilityLabel(label)
-    }
-}
 
 private struct ScreenBody: View {
     @EnvironmentObject private var model: DashboardModel

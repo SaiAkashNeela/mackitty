@@ -44,6 +44,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         checkMoveToApplicationsIfNeeded()
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        for window in sender.windows where window.title == "MacKitty" || window.canBecomeMain {
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
+            window.makeKeyAndOrderFront(nil)
+            return true
+        }
+        return true
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        for window in NSApp.windows where window.title == "MacKitty" || window.canBecomeMain {
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
+        }
+    }
+
     private func checkMoveToApplicationsIfNeeded() {
         let bundlePath = Bundle.main.bundlePath
         // Only prompt if running from a mounted DMG volume or Downloads folder

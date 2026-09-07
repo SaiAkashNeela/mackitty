@@ -6,23 +6,22 @@ struct ContentView: View {
 
     var body: some View {
         SimpleDashboardView()
-        .background(WindowChromeConfigurator())
-        .frame(minWidth: 1040, minHeight: 700)
-        .onAppear { model.refreshVersion() }
-        .alert("MacKitty", isPresented: Binding(
-            get: { model.alertMessage != nil },
-            set: { if !$0 { model.alertMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) { model.alertMessage = nil }
-        } message: {
-            Text(model.alertMessage ?? "")
-        }
+            .ignoresSafeArea(.all, edges: .top)
+            .background(WindowChromeConfigurator())
+            .frame(minWidth: 1040, minHeight: 700)
+            .onAppear { model.refreshVersion() }
+            .alert("MacKitty", isPresented: Binding(
+                get: { model.alertMessage != nil },
+                set: { if !$0 { model.alertMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { model.alertMessage = nil }
+            } message: {
+                Text(model.alertMessage ?? "")
+            }
     }
 }
 
-/// Keeps the reference design's custom chrome in charge of the top edge.
-/// macOS creates the red/yellow/green window buttons automatically, so hide
-/// those standard controls while preserving normal Cmd-W window behavior.
+/// Keeps Apple native traffic light controls visible in a unified, transparent chrome
 private struct WindowChromeConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = NSView(frame: .zero)
@@ -36,12 +35,14 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
 
     private func configure(_ window: NSWindow?) {
         guard let window else { return }
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
+        window.styleMask.insert([.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView])
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.styleMask.insert([.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView])
+
+        // Ensure Apple authentic native traffic lights are visible & interactive
+        window.standardWindowButton(.closeButton)?.isHidden = false
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = false
+        window.standardWindowButton(.zoomButton)?.isHidden = false
         window.isMovableByWindowBackground = true
         window.isOpaque = false
         window.backgroundColor = .clear
