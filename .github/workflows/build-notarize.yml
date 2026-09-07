@@ -132,6 +132,15 @@ jobs:
           </plist>
           EOF
 
+      - name: Validate Apple Developer ID Certificate Secret
+        run: |
+          if [ -z "$APPLE_CERTIFICATE_BASE64" ]; then
+            echo "❌ ERROR: 'APPLE_CERTIFICATE_BASE64' is missing in GitHub Repository Secrets!"
+            echo "Apple Notary Service requires binaries to be signed with your Developer ID Application certificate before submission."
+            echo "Please add 'APPLE_CERTIFICATE_BASE64' and 'APPLE_CERTIFICATE_PASSWORD' to your GitHub Secrets."
+            exit 1
+          fi
+
       - name: Import Apple Developer ID Certificate
         if: env.APPLE_CERTIFICATE_BASE64 != ''
         run: |
