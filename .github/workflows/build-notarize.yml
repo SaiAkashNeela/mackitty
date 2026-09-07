@@ -39,7 +39,13 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
+
+      - name: Verify Latest Commit In Push
+        run: |
+          echo "Building newest and latest commit in this push: ${{ github.sha }}"
+          git log -1 --format="Commit: %h - %s (%an, %cr)"
 
       - name: Determine Version
         id: versioning
