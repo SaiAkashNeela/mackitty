@@ -73,6 +73,13 @@ struct SimpleDashboardView: View {
                 ScanPermissionModalView()
                     .environmentObject(model)
             }
+            .sheet(isPresented: $model.showMoleInstallPrompt) {
+                MoleInstallModalView()
+                    .environmentObject(model)
+            }
+            .onAppear {
+                model.checkFirstRunMolePrompt()
+            }
         }
         .preferredColorScheme(.dark)
     }

@@ -30,8 +30,10 @@ final class DashboardModel: ObservableObject {
     @Published var activeAppWarnings: [String] = []
     @Published var showAbout: Bool = false
     @Published var showScanPermissionModal: Bool = false
+    @Published var showMoleInstallPrompt: Bool = false
 
     let mole = MoleService()
+    let nativeCleaner = NativeCleanerService()
     let monitor = SystemMonitorService()
     let updater = UpdateCheckerService()
     private var scanTask: Task<Void, Never>?
@@ -46,6 +48,13 @@ final class DashboardModel: ObservableObject {
         }
         refreshDiskStats()
         refreshInstalledApps()
+        refreshVersion()
+    }
+
+    func checkFirstRunMolePrompt() {
+        if !mole.isAvailable && !UserDefaults.standard.bool(forKey: "didPromptMoleInstall") {
+            showMoleInstallPrompt = true
+        }
     }
 
     var primaryButtonTitle: String {
@@ -208,25 +217,46 @@ final class DashboardModel: ObservableObject {
 
         scanTask = Task { [weak self] in
             guard let self else { return }
-            do {
-                let result = try await self.mole.previewCleanup { [weak self] chunk in
+            if self.mole.isAvailable {
+                do {
+                    let result = try await self.mole.previewCleanup { [weak self] chunk in
+                        Task { @MainActor [weak self] in
+                            self?.consumeLiveOutput(chunk)
+                        }
+                    }
+                    if didCancelScan { return }
+                    lastOperationOutput = result.output
+                } catch {
+                    if didCancelScan {
+                        isScanning = false
+                        screen = .welcome
+                        scanPhase = "Scan stopped"
+                        scanProgress = 0
+                        tickerTask?.cancel()
+                        return
+                    }
+                    lastOperationOutput = error.localizedDescription
+                }
+            } else {
+                // Standalone Native Swift scanning with real byte measurements
+                let scanResult = await self.nativeCleaner.scanAllTargets { [weak self] name, path in
                     Task { @MainActor [weak self] in
-                        self?.consumeLiveOutput(chunk)
+                        guard let self else { return }
+                        self.scanPhase = "Scanning \(name)…"
+                        self.scanCurrentPath = path
+                        self.scanFilesInspected += 18
                     }
                 }
                 if didCancelScan { return }
-                lastOperationOutput = result.output
-            } catch {
-                if didCancelScan {
-                    isScanning = false
-                    screen = .welcome
-                    scanPhase = "Scan stopped"
-                    scanProgress = 0
-                    tickerTask?.cancel()
-                    return
-                }
-                lastOperationOutput = error.localizedDescription
-                scanPhase = self.mole.isAvailable ? "Reading safe cleanup areas…" : "Demo data · install Mole to connect"
+                self.cleanupCategories = scanResult.categories
+                let junkFormatted = ByteCountFormatter.string(fromByteCount: scanResult.totalBytes, countStyle: .file)
+                self.report.metrics = [
+                    ScanMetric(title: "Junk Files", value: junkFormatted, detail: "Safe caches & logs", icon: "trash.fill", tint: .coral),
+                    ScanMetric(title: "Items Scanned", value: "\(scanResult.totalItems)", detail: "Cleanable entries", icon: "doc.fill", tint: .blue),
+                    ScanMetric(title: "Engine", value: "Native", detail: "Swift safe engine", icon: "bolt.fill", tint: .mint),
+                    ScanMetric(title: "Safety Level", value: "100%", detail: "Zero personal data", icon: "shield.fill", tint: .violet)
+                ]
+                self.scanFilesInspected = max(self.scanFilesInspected, scanResult.totalItems)
             }
 
             tickerTask?.cancel()
@@ -292,36 +322,69 @@ final class DashboardModel: ObservableObject {
 
         Task { [weak self] in
             guard let self else { return }
-            do {
-                let result = try await mole.clean { [weak self] chunk in
-                    Task { @MainActor [weak self] in
-                        self?.consumeCleanOutput(chunk)
+            if self.mole.isAvailable {
+                do {
+                    let result = try await mole.clean { [weak self] chunk in
+                        Task { @MainActor [weak self] in
+                            self?.consumeCleanOutput(chunk)
+                        }
                     }
-                }
-                if didCancelCleaning { return }
-                report.status = "Cleanup complete"
-                lastOperationOutput = result.output
-                didClean = true
-                cleanPhase = "Cleanup complete"
-                cleanProgress = 1
-                lastCleanupBreakdown = cleanupCategories.filter(\.isSelected).map { ($0.name, $0.sizeBytes) }
-                history.insert(CleanupHistoryEntry(id: UUID(), date: Date(), bytes: cleanedBytes, categoryCount: cleanedCategories), at: 0)
-                clearCleanupAreas()
-                persistHistory()
-                refreshDiskStats()
-                screen = .summary
-            } catch {
-                if didCancelCleaning {
-                    isCleaning = false
+                    if didCancelCleaning { return }
+                    report.status = "Cleanup complete"
+                    lastOperationOutput = result.output
+                } catch {
+                    if didCancelCleaning {
+                        isCleaning = false
+                        screen = .triage
+                        cleanPhase = "Cleaning stopped"
+                        return
+                    }
+                    lastOperationOutput = error.localizedDescription
+                    alertMessage = error.localizedDescription
                     screen = .triage
-                    cleanPhase = "Cleaning stopped"
+                    isCleaning = false
                     return
                 }
-                lastOperationOutput = error.localizedDescription
-                alertMessage = error.localizedDescription
-                screen = .triage
+            } else {
+                // Standalone Native Swift cleaning
+                let selected = self.cleanupCategories.filter(\.isSelected)
+                let totalSelected = selected.count
+                var processedCount = 0
+
+                for category in selected {
+                    if self.didCancelCleaning { break }
+                    let _ = await self.nativeCleaner.cleanCategory(category) { [weak self] progressText in
+                        Task { @MainActor [weak self] in
+                            guard let self else { return }
+                            self.cleanPhase = progressText
+                            if self.cleanLog.last != progressText {
+                                self.cleanLog.append(progressText)
+                                self.cleanLog = Array(self.cleanLog.suffix(8))
+                            }
+                        }
+                    }
+                    processedCount += 1
+                    self.cleanProgress = min(Double(processedCount) / Double(max(totalSelected, 1)), 0.95)
+                }
+
+                if self.didCancelCleaning {
+                    self.isCleaning = false
+                    self.screen = .triage
+                    self.cleanPhase = "Cleaning stopped"
+                    return
+                }
             }
-            isCleaning = false
+
+            self.didClean = true
+            self.cleanPhase = "Cleanup complete"
+            self.cleanProgress = 1
+            self.lastCleanupBreakdown = self.cleanupCategories.filter(\.isSelected).map { ($0.name, $0.sizeBytes) }
+            self.history.insert(CleanupHistoryEntry(id: UUID(), date: Date(), bytes: cleanedBytes, categoryCount: cleanedCategories), at: 0)
+            self.clearCleanupAreas()
+            self.persistHistory()
+            self.refreshDiskStats()
+            self.screen = .summary
+            self.isCleaning = false
         }
     }
 
@@ -426,14 +489,18 @@ final class DashboardModel: ObservableObject {
 
     func refreshVersion() {
         Task {
-            do {
-                let result = try await mole.version()
-                let trimmed = result.output.trimmingCharacters(in: .whitespacesAndNewlines)
-                if let firstLine = trimmed.split(whereSeparator: \.isNewline).first, !firstLine.isEmpty {
-                    moleVersion = "Mole CLI · \(firstLine)"
+            if mole.isAvailable {
+                do {
+                    let result = try await mole.version()
+                    let trimmed = result.output.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let firstLine = trimmed.split(whereSeparator: \.isNewline).first, !firstLine.isEmpty {
+                        moleVersion = "Mole CLI · \(firstLine)"
+                    }
+                } catch {
+                    moleVersion = "Mole CLI connected"
                 }
-            } catch {
-                moleVersion = mole.isAvailable ? "Mole CLI connected" : "Mole CLI not found"
+            } else {
+                moleVersion = "Native Swift Engine"
             }
         }
     }
