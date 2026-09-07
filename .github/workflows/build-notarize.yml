@@ -151,8 +151,20 @@ jobs:
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Decode p12 certificate
-          printf '%s' "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          # Decode base64 to raw p12
+          printf '%s' "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/raw.p12"
+
+          # Convert to legacy 3DES/RC2 format that macOS `security import` tool supports
+          echo "Processing certificate format for macOS Keychain compatibility..."
+          if openssl pkcs12 -in "$RUNNER_TEMP/raw.p12" -nodes -passin "pass:${APPLE_CERTIFICATE_PASSWORD:-}" 2>/dev/null | \
+             openssl pkcs12 -export -legacy -out "$RUNNER_TEMP/certificate.p12" -passout "pass:${APPLE_CERTIFICATE_PASSWORD:-}" 2>/dev/null; then
+            echo "Certificate prepared in Keychain-compatible legacy format."
+          else
+            echo "Direct conversion bypassed, falling back to direct import."
+            cp "$RUNNER_TEMP/raw.p12" "$RUNNER_TEMP/certificate.p12"
+          fi
+          rm -f "$RUNNER_TEMP/raw.p12"
+
           security import "$RUNNER_TEMP/certificate.p12" \
             -k "$KEYCHAIN_PATH" \
             -P "${APPLE_CERTIFICATE_PASSWORD:-}" \
