@@ -13,6 +13,11 @@ on:
       - '.gitignore'
   workflow_dispatch:
 
+# Ensure only 1 workflow runs per push; cancels previous in-progress runs on new pushes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
