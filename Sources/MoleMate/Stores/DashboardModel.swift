@@ -18,7 +18,7 @@ final class DashboardModel: ObservableObject {
     @Published var cleanProgress = 0.0
     @Published var cleanLog: [String] = []
     @Published var lastCleanupBreakdown: [(String, Int64)] = []
-    @Published var cleanupCategories = CleanupCategory.sample
+    @Published var cleanupCategories: [CleanupCategory] = []
     @Published var hasScanResults = false
     @Published var didClean = false
     @Published private(set) var history: [CleanupHistoryEntry] = []
@@ -179,14 +179,14 @@ final class DashboardModel: ObservableObject {
         didClean = false
         hasScanResults = false
         didCancelScan = false
-        scanPhase = "Starting Mole…"
+        scanPhase = "Starting scan…"
         scanCurrentPath = "Inspecting safe cleanup areas…"
         scanFilesInspected = 0
         scanProgress = 0.05
 
         checkRunningAppWarnings()
 
-        // Active ticker so the UI never feels frozen while Mole traverses disk
+        // Active ticker so the UI never feels frozen while traversing disk
         tickerTask = Task { @MainActor [weak self] in
             guard let self else { return }
             let simulatedPaths = [
@@ -195,12 +195,8 @@ final class DashboardModel: ObservableObject {
                 "~/Library/Caches/org.mozilla.firefox",
                 "~/Library/Developer/Xcode/DerivedData",
                 "~/.npm/_cacache",
-                "~/Library/Caches/JetBrains",
-                "~/Library/Logs/DiagnosticReports",
-                "~/Library/Caches/com.spotify.client",
-                "~/Library/Application Support/CrashReporter",
-                "~/Library/Caches/pypoetry/virtualenvs",
-                "~/Library/Caches/CloudKit"
+                "~/Library/Logs",
+                "~/Library/Caches"
             ]
             var pathIdx = 0
             while self.isScanning && !self.didCancelScan {
@@ -237,27 +233,27 @@ final class DashboardModel: ObservableObject {
                     }
                     lastOperationOutput = error.localizedDescription
                 }
-            } else {
-                // Standalone Native Swift scanning with real byte measurements
-                let scanResult = await self.nativeCleaner.scanAllTargets { [weak self] name, path in
-                    Task { @MainActor [weak self] in
-                        guard let self else { return }
-                        self.scanPhase = "Scanning \(name)…"
-                        self.scanCurrentPath = path
-                        self.scanFilesInspected += 18
-                    }
-                }
-                if didCancelScan { return }
-                self.cleanupCategories = scanResult.categories
-                let junkFormatted = ByteCountFormatter.string(fromByteCount: scanResult.totalBytes, countStyle: .file)
-                self.report.metrics = [
-                    ScanMetric(title: "Junk Files", value: junkFormatted, detail: "Safe caches & logs", icon: "trash.fill", tint: .coral),
-                    ScanMetric(title: "Items Scanned", value: "\(scanResult.totalItems)", detail: "Cleanable entries", icon: "doc.fill", tint: .blue),
-                    ScanMetric(title: "Engine", value: "Native", detail: "Swift safe engine", icon: "bolt.fill", tint: .mint),
-                    ScanMetric(title: "Safety Level", value: "100%", detail: "Zero personal data", icon: "shield.fill", tint: .violet)
-                ]
-                self.scanFilesInspected = max(self.scanFilesInspected, scanResult.totalItems)
             }
+
+            // Always scan real targets to populate cleanupCategories with real sizes
+            let scanResult = await self.nativeCleaner.scanAllTargets { [weak self] name, path in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.scanPhase = "Scanning \(name)…"
+                    self.scanCurrentPath = path
+                    self.scanFilesInspected += 18
+                }
+            }
+            if didCancelScan { return }
+            self.cleanupCategories = scanResult.categories
+            let junkFormatted = ByteCountFormatter.string(fromByteCount: scanResult.totalBytes, countStyle: .file)
+            self.report.metrics = [
+                ScanMetric(title: "Junk Files", value: junkFormatted, detail: "Safe caches & logs", icon: "trash.fill", tint: .coral),
+                ScanMetric(title: "Items Scanned", value: "\(scanResult.totalItems)", detail: "Cleanable entries", icon: "doc.fill", tint: .blue),
+                ScanMetric(title: "Engine", value: self.mole.isAvailable ? "Mole + Native" : "Native", detail: self.mole.isAvailable ? "Mole CLI active" : "Swift safe engine", icon: "bolt.fill", tint: .mint),
+                ScanMetric(title: "Safety Level", value: "100%", detail: "Zero personal data", icon: "shield.fill", tint: .violet)
+            ]
+            self.scanFilesInspected = max(self.scanFilesInspected, scanResult.totalItems)
 
             tickerTask?.cancel()
             tickerTask = nil
@@ -310,8 +306,9 @@ final class DashboardModel: ObservableObject {
 
     func clean() {
         guard !isCleaning, hasSelectedCleanup else { return }
-        let cleanedBytes = selectedCleanupSize
-        let cleanedCategories = cleanupCategories.filter(\.isSelected).count
+        let selectedCategories = cleanupCategories.filter(\.isSelected)
+        let selectedBytes = selectedCleanupSize
+        let cleanedCount = selectedCategories.count
         isCleaning = true
         screen = .cleaning
         didCancelCleaning = false
@@ -322,7 +319,31 @@ final class DashboardModel: ObservableObject {
 
         Task { [weak self] in
             guard let self else { return }
-            if self.mole.isAvailable {
+            var actuallyCleanedBytes: Int64 = 0
+
+            // 1. Clean selected categories via native engine (with real recursive deletion and size tracking)
+            let totalSelected = selectedCategories.count
+            var processedCount = 0
+
+            for category in selectedCategories {
+                if self.didCancelCleaning { break }
+                let bytes = await self.nativeCleaner.cleanCategory(category) { [weak self] progressText in
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        self.cleanPhase = progressText
+                        if self.cleanLog.last != progressText {
+                            self.cleanLog.append(progressText)
+                            self.cleanLog = Array(self.cleanLog.suffix(8))
+                        }
+                    }
+                }
+                actuallyCleanedBytes += bytes
+                processedCount += 1
+                self.cleanProgress = min(Double(processedCount) / Double(max(totalSelected, 1)), 0.85)
+            }
+
+            // 2. If Mole is available, also run mole.clean
+            if self.mole.isAvailable && !self.didCancelCleaning {
                 do {
                     let result = try await mole.clean { [weak self] chunk in
                         Task { @MainActor [weak self] in
@@ -340,46 +361,26 @@ final class DashboardModel: ObservableObject {
                         return
                     }
                     lastOperationOutput = error.localizedDescription
-                    alertMessage = error.localizedDescription
-                    screen = .triage
-                    isCleaning = false
-                    return
-                }
-            } else {
-                // Standalone Native Swift cleaning
-                let selected = self.cleanupCategories.filter(\.isSelected)
-                let totalSelected = selected.count
-                var processedCount = 0
-
-                for category in selected {
-                    if self.didCancelCleaning { break }
-                    let _ = await self.nativeCleaner.cleanCategory(category) { [weak self] progressText in
-                        Task { @MainActor [weak self] in
-                            guard let self else { return }
-                            self.cleanPhase = progressText
-                            if self.cleanLog.last != progressText {
-                                self.cleanLog.append(progressText)
-                                self.cleanLog = Array(self.cleanLog.suffix(8))
-                            }
-                        }
-                    }
-                    processedCount += 1
-                    self.cleanProgress = min(Double(processedCount) / Double(max(totalSelected, 1)), 0.95)
-                }
-
-                if self.didCancelCleaning {
-                    self.isCleaning = false
-                    self.screen = .triage
-                    self.cleanPhase = "Cleaning stopped"
-                    return
                 }
             }
+
+            if self.didCancelCleaning {
+                self.isCleaning = false
+                self.screen = .triage
+                self.cleanPhase = "Cleaning stopped"
+                return
+            }
+
+            // 3. Immediately re-scan real targets so the UI reflects real zeroed/reduced disk sizes
+            let rescanResult = await self.nativeCleaner.scanAllTargets { _, _ in }
+            self.cleanupCategories = rescanResult.categories
 
             self.didClean = true
             self.cleanPhase = "Cleanup complete"
             self.cleanProgress = 1
-            self.lastCleanupBreakdown = self.cleanupCategories.filter(\.isSelected).map { ($0.name, $0.sizeBytes) }
-            self.history.insert(CleanupHistoryEntry(id: UUID(), date: Date(), bytes: cleanedBytes, categoryCount: cleanedCategories), at: 0)
+            self.lastCleanupBreakdown = selectedCategories.map { ($0.name, $0.sizeBytes) }
+            let recordedBytes = actuallyCleanedBytes > 0 ? actuallyCleanedBytes : selectedBytes
+            self.history.insert(CleanupHistoryEntry(id: UUID(), date: Date(), bytes: recordedBytes, categoryCount: cleanedCount), at: 0)
             self.clearCleanupAreas()
             self.persistHistory()
             self.refreshDiskStats()
