@@ -160,15 +160,41 @@ final class NativeCleanerService: @unchecked Sendable {
             )
 
             categories.append(category)
-            totalBytes += bytes
-            totalItems += count
+        }
+
+        // Check Docker if installed (whether Mole is installed or not)
+        if let dockerMetrics = await inspectDockerMetrics(), dockerMetrics.bytes > 0 || dockerMetrics.count > 0 {
+            onProgress("Docker Daemon", "docker://localhost", totalItems)
+            let formattedCount = dockerMetrics.count > 0 ? NumberFormatter.localizedString(from: NSNumber(value: dockerMetrics.count), number: .decimal) : "1"
+            let dockerCategory = CleanupCategory(
+                id: "docker-images",
+                name: "Docker Dangling & Unused Images",
+                detail: "Dangling layers (<none>:<none>) & builder cache",
+                path: "Docker Daemon",
+                items: formattedCount,
+                sizeBytes: dockerMetrics.bytes,
+                icon: "shippingbox.fill",
+                isSelected: dockerMetrics.bytes > 0
+            )
+            categories.append(dockerCategory)
+            totalBytes += dockerMetrics.bytes
+            totalItems += dockerMetrics.count
         }
 
         return NativeScanResult(categories: categories, totalBytes: totalBytes, totalItems: totalItems)
     }
 
-    /// Safely cleans contents inside a target directory without deleting the parent folder itself
+    /// Safely cleans contents inside a target directory or triggers Docker pruning without deleting parent folders
     func cleanCategory(_ category: CleanupCategory, onProgress: @escaping (String) -> Void) async -> Int64 {
+        // Docker special category
+        if category.id == "docker-images" {
+            let beforeBytes = category.sizeBytes
+            _ = await cleanDocker(onProgress: onProgress)
+            let after = await inspectDockerMetrics()
+            let freed = max(beforeBytes - (after?.bytes ?? 0), beforeBytes)
+            return freed
+        }
+
         guard let spec = targets.first(where: { $0.id == category.id }) else { return 0 }
         let url = resolveURL(for: spec.relativePath)
 
@@ -208,5 +234,125 @@ final class NativeCleanerService: @unchecked Sendable {
         }
 
         return cleanedBytes
+    }
+
+    // MARK: - Docker Integration
+
+    private var dockerExecutableURL: URL? {
+        let candidates = [
+            "/usr/local/bin/docker",
+            "/opt/homebrew/bin/docker",
+            "/usr/bin/docker",
+            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".docker/bin/docker").path
+        ]
+        if let found = candidates.first(where: { fileManager.isExecutableFile(atPath: $0) }) {
+            return URL(fileURLWithPath: found)
+        }
+        return nil
+    }
+
+    private func runDockerCommand(arguments: [String], timeoutSeconds: Double = 3.0) async -> String? {
+        guard let executableURL = dockerExecutableURL else { return nil }
+
+        return await withCheckedContinuation { continuation in
+            let process = Process()
+            let pipe = Pipe()
+            process.executableURL = executableURL
+            process.arguments = arguments
+            process.standardOutput = pipe
+            process.standardError = FileHandle.nullDevice
+
+            let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+            timer.schedule(deadline: .now() + timeoutSeconds)
+            timer.setEventHandler {
+                if process.isRunning {
+                    process.terminate()
+                }
+                timer.cancel()
+            }
+            timer.resume()
+
+            process.terminationHandler = { _ in
+                timer.cancel()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                continuation.resume(returning: String(data: data, encoding: .utf8))
+            }
+
+            do {
+                try process.run()
+            } catch {
+                timer.cancel()
+                continuation.resume(returning: nil)
+            }
+        }
+    }
+
+    func inspectDockerMetrics() async -> (bytes: Int64, count: Int, isAvailable: Bool)? {
+        guard dockerExecutableURL != nil else { return nil }
+        var rawOutput = await runDockerCommand(arguments: ["system", "df", "--format", "{{json .}}"])
+        if rawOutput == nil {
+            rawOutput = await runDockerCommand(arguments: ["system", "df", "--format", "json"])
+        }
+        guard let output = rawOutput else { return nil }
+
+        var totalReclaimableBytes: Int64 = 0
+        var totalReclaimableCount = 0
+
+        for line in output.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, let data = trimmed.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                continue
+            }
+
+            let type = (json["Type"] as? String) ?? ""
+            if type == "Images" || type == "Build Cache" {
+                if let reclRaw = json["Reclaimable"] as? String {
+                    let sizePart = reclRaw.components(separatedBy: "(").first?.trimmingCharacters(in: .whitespaces) ?? ""
+                    let bytes = parseByteString(sizePart)
+                    totalReclaimableBytes += bytes
+                }
+                if let totalCountStr = json["TotalCount"] as? String, let count = Int(totalCountStr) {
+                    totalReclaimableCount += count
+                }
+            }
+        }
+
+        if let danglingOutput = await runDockerCommand(arguments: ["images", "-f", "dangling=true", "-q"]) {
+            let danglingCount = danglingOutput.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count
+            if danglingCount > 0 {
+                totalReclaimableCount = max(totalReclaimableCount, danglingCount)
+            }
+        }
+
+        guard totalReclaimableBytes > 0 || totalReclaimableCount > 0 else { return nil }
+        return (totalReclaimableBytes, totalReclaimableCount, true)
+    }
+
+    func cleanDocker(onProgress: @escaping (String) -> Void) async -> Int64 {
+        onProgress("Pruning dangling Docker images (<none>:<none>)…")
+        _ = await runDockerCommand(arguments: ["image", "prune", "-f"], timeoutSeconds: 15.0)
+
+        onProgress("Pruning dangling Docker build cache…")
+        _ = await runDockerCommand(arguments: ["builder", "prune", "-f"], timeoutSeconds: 15.0)
+
+        return 0
+    }
+
+    private func parseByteString(_ str: String) -> Int64 {
+        let scanner = Scanner(string: str)
+        guard let val = scanner.scanDouble() else { return 0 }
+        let unit = str.replacingOccurrences(of: "\(val)", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        let multiplier: Double
+        if unit.hasPrefix("T") { multiplier = 1024 * 1024 * 1024 * 1024 }
+        else if unit.hasPrefix("G") { multiplier = 1024 * 1024 * 1024 }
+        else if unit.hasPrefix("M") { multiplier = 1024 * 1024 }
+        else if unit.hasPrefix("K") { multiplier = 1024 }
+        else { multiplier = 1 }
+
+        return Int64(val * multiplier)
     }
 }

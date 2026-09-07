@@ -385,6 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 8. Theme Switcher (Time-Aware Auto Theme + Manual Toggle with Persistence)
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
+  const mobileThemeToggleBtn = document.getElementById("mobile-theme-toggle-btn");
   const storedTheme = localStorage.getItem("mackitty-theme");
 
   function applyTheme(theme) {
@@ -408,12 +409,71 @@ document.addEventListener("DOMContentLoaded", () => {
     applyTheme(getAutoTimeTheme());
   }
 
+  function toggleCurrentTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const nextTheme = (currentTheme === "light") ? "dark" : "light";
+    applyTheme(nextTheme);
+    localStorage.setItem("mackitty-theme", nextTheme);
+  }
+
   if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-      const nextTheme = (currentTheme === "light") ? "dark" : "light";
-      applyTheme(nextTheme);
-      localStorage.setItem("mackitty-theme", nextTheme);
+    themeToggleBtn.addEventListener("click", toggleCurrentTheme);
+  }
+  if (mobileThemeToggleBtn) {
+    mobileThemeToggleBtn.addEventListener("click", toggleCurrentTheme);
+  }
+
+  // 9. Mobile Navigation Drawer
+  const mobileNavToggle = document.getElementById("btn-mobile-nav-toggle");
+  const mobileNavDrawer = document.getElementById("mobile-nav-drawer");
+  const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
+
+  function closeMobileNav() {
+    if (mobileNavDrawer) mobileNavDrawer.classList.remove("open");
+    if (mobileNavToggle) {
+      mobileNavToggle.classList.remove("active");
+      mobileNavToggle.setAttribute("aria-expanded", "false");
+    }
+    document.body.style.overflow = "";
+  }
+
+  function openMobileNav() {
+    if (mobileNavDrawer) mobileNavDrawer.classList.add("open");
+    if (mobileNavToggle) {
+      mobileNavToggle.classList.add("active");
+      mobileNavToggle.setAttribute("aria-expanded", "true");
+    }
+    document.body.style.overflow = "hidden";
+  }
+
+  if (mobileNavToggle && mobileNavDrawer) {
+    mobileNavToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = mobileNavDrawer.classList.contains("open");
+      if (isOpen) {
+        closeMobileNav();
+      } else {
+        openMobileNav();
+      }
+    });
+
+    if (mobileNavBackdrop) {
+      mobileNavBackdrop.addEventListener("click", closeMobileNav);
+    }
+
+    // Close on navigation link tap
+    const drawerLinks = mobileNavDrawer.querySelectorAll("a");
+    drawerLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        closeMobileNav();
+      });
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && mobileNavDrawer.classList.contains("open")) {
+        closeMobileNav();
+      }
     });
   }
 });
