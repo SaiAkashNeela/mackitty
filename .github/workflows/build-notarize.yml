@@ -143,7 +143,7 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
           # Decode p12 certificate
-          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          printf '%s' "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
           security import "$RUNNER_TEMP/certificate.p12" \
             -k "$KEYCHAIN_PATH" \
             -P "${APPLE_CERTIFICATE_PASSWORD:-}" \
@@ -211,13 +211,14 @@ jobs:
           if [ -n "$APPLE_API_KEY_BASE64" ] && [ -n "$APPLE_API_KEY_ID" ] && [ -n "$APPLE_API_ISSUER_ID" ]; then
             echo "Submitting DMG to Apple Notary Service using App Store Connect API Key..."
             P8_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
-            echo "$APPLE_API_KEY_BASE64" | base64 --decode > "$P8_PATH"
+            printf '%s' "$APPLE_API_KEY_BASE64" | base64 --decode > "$P8_PATH"
 
             xcrun notarytool submit "dist/MacKitty.dmg" \
               --key "$P8_PATH" \
               --key-id "$APPLE_API_KEY_ID" \
               --issuer "$APPLE_API_ISSUER_ID" \
               --wait
+            rm -f "$P8_PATH"
           elif [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
             echo "Submitting DMG to Apple Notary Service using Apple ID + App-Specific Password..."
             xcrun notarytool submit "dist/MacKitty.dmg" \
