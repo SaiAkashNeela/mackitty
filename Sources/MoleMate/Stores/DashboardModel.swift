@@ -38,6 +38,12 @@ final class DashboardModel: ObservableObject {
     let monitor = SystemMonitorService()
     var updater = UpdateCheckerService()
     private var scanTask: Task<Void, Never>?
+    private var cleanTask: Task<Void, Never>?
+    /// Each scan/clean run gets an ID so a cancelled run can't apply stale results
+    /// or keep deleting after the user starts a new one.
+    private var scanRunID = UUID()
+    private var cleanRunID = UUID()
+    static let moleCategoryID = "mole-deep-clean"
     private var tickerTask: Task<Void, Never>?
     private var didCancelScan = false
     private var didCancelCleaning = false
@@ -62,6 +68,7 @@ final class DashboardModel: ObservableObject {
     }
 
     func checkFirstRunMolePrompt() {
+        if isAppStoreBuild { return }
         if !mole.isAvailable && !UserDefaults.standard.bool(forKey: "didPromptMoleInstall") {
             showMoleInstallPrompt = true
         }
@@ -77,7 +84,9 @@ final class DashboardModel: ObservableObject {
         }
     }
 
-    var hasSelectedCleanup: Bool { selectedCleanupSize > 0 }
+    var hasSelectedCleanup: Bool {
+        selectedCleanupSize > 0 || cleanupCategories.contains { $0.isSelected && $0.id == Self.moleCategoryID }
+    }
     var totalCleanedBytes: Int64 { history.reduce(0) { $0 + $1.bytes } }
 
     var selectedCleanupSizeText: String {
@@ -132,6 +141,14 @@ final class DashboardModel: ObservableObject {
     }
 
     func requestScan() {
+        if isAppStoreBuild {
+            if SandboxAccess.hasAccess || SandboxAccess.requestHomeAccess() {
+                scan()
+            } else {
+                alertMessage = "MacKitty needs access to your home folder to scan caches and logs. Choose your home folder (the one with your name) when asked."
+            }
+            return
+        }
         if UserDefaults.standard.bool(forKey: "didAcknowledgeScanPermissions") {
             scan()
         } else {
@@ -196,6 +213,8 @@ final class DashboardModel: ObservableObject {
 
         checkRunningAppWarnings()
 
+        let runID = UUID()
+        scanRunID = runID
         scanTask = Task { [weak self] in
             guard let self else { return }
             if self.mole.isAvailable {
@@ -205,7 +224,7 @@ final class DashboardModel: ObservableObject {
                             self?.consumeLiveOutput(chunk)
                         }
                     }
-                    if didCancelScan { return }
+                    if didCancelScan || scanRunID != runID { return }
                     lastOperationOutput = result.output
                 } catch {
                     if didCancelScan {
@@ -229,8 +248,22 @@ final class DashboardModel: ObservableObject {
                     self.scanProgress = min(0.15 + (Double(countSoFar) / 1000.0) * 0.75, 0.95)
                 }
             }
-            if didCancelScan { return }
-            self.cleanupCategories = scanResult.categories
+            if didCancelScan || scanRunID != runID { return }
+            var categories = scanResult.categories
+            if self.mole.isAvailable {
+                // Mole's own clean set is broader than these folders, so it is an explicit opt-in.
+                categories.append(CleanupCategory(
+                    id: Self.moleCategoryID,
+                    name: "Mole Deep Clean",
+                    detail: "Runs Mole's full safe-clean set (mo clean)",
+                    path: "Mole CLI",
+                    items: "Varies",
+                    sizeBytes: 0,
+                    icon: "terminal",
+                    isSelected: false
+                ))
+            }
+            self.cleanupCategories = categories
             let junkFormatted = ByteCountFormatter.string(fromByteCount: scanResult.totalBytes, countStyle: .file)
             self.report.metrics = [
                 ScanMetric(title: "Junk Files", value: junkFormatted, detail: "Safe caches & logs", icon: "trash.fill", tint: .coral),
@@ -240,7 +273,7 @@ final class DashboardModel: ObservableObject {
             ]
             self.scanFilesInspected = scanResult.totalItems
 
-            if didCancelScan { return }
+            if didCancelScan || scanRunID != runID { return }
             report.scannedAt = Date()
             report.status = "Scan complete · review safe cleanup areas"
             scanPhase = "Scan complete · review safe cleanup areas"
@@ -256,6 +289,7 @@ final class DashboardModel: ObservableObject {
     func cancelScan() {
         guard isScanning else { return }
         didCancelScan = true
+        scanRunID = UUID()
         scanTask?.cancel()
         mole.cancelCurrentOperation()
         isScanning = false
@@ -298,7 +332,9 @@ final class DashboardModel: ObservableObject {
         cleanLog = []
         alertMessage = nil
 
-        Task { [weak self] in
+        let runID = UUID()
+        cleanRunID = runID
+        cleanTask = Task { [weak self] in
             guard let self else { return }
             var actuallyCleanedBytes: Int64 = 0
 
@@ -307,7 +343,7 @@ final class DashboardModel: ObservableObject {
             var processedCount = 0
 
             for category in selectedCategories {
-                if self.didCancelCleaning { break }
+                if (self.didCancelCleaning || self.cleanRunID != runID) { break }
                 let bytes = await self.nativeCleaner.cleanCategory(category) { [weak self] progressText in
                     Task { @MainActor [weak self] in
                         guard let self else { return }
@@ -324,17 +360,19 @@ final class DashboardModel: ObservableObject {
             }
 
             // 2. If Mole is available, also run mole.clean
-            if self.mole.isAvailable && !self.didCancelCleaning {
+            let runMole = selectedCategories.contains { $0.id == Self.moleCategoryID }
+            if runMole && self.mole.isAvailable && !(self.didCancelCleaning || self.cleanRunID != runID) {
                 do {
                     let result = try await mole.clean { [weak self] chunk in
                         Task { @MainActor [weak self] in
                             self?.consumeCleanOutput(chunk)
                         }
                     }
-                    if didCancelCleaning { return }
+                    if (didCancelCleaning || cleanRunID != runID) { return }
                     report.status = "Cleanup complete"
                     lastOperationOutput = result.output
                 } catch {
+                    if cleanRunID != runID { return }
                     if didCancelCleaning {
                         isCleaning = false
                         screen = .triage
@@ -345,6 +383,7 @@ final class DashboardModel: ObservableObject {
                 }
             }
 
+            if self.cleanRunID != runID { return }
             if self.didCancelCleaning {
                 self.isCleaning = false
                 self.screen = .triage
@@ -354,6 +393,7 @@ final class DashboardModel: ObservableObject {
 
             // 3. Immediately re-scan real targets so the UI reflects real zeroed/reduced disk sizes
             let rescanResult = await self.nativeCleaner.scanAllTargets()
+            if self.cleanRunID != runID { return }
             self.cleanupCategories = rescanResult.categories
 
             self.didClean = true
@@ -373,6 +413,8 @@ final class DashboardModel: ObservableObject {
     func cancelCleaning() {
         guard isCleaning else { return }
         didCancelCleaning = true
+        cleanRunID = UUID()
+        cleanTask?.cancel()
         mole.cancelCurrentOperation()
         isCleaning = false
         screen = .triage

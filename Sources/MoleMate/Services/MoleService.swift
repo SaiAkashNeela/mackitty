@@ -42,30 +42,40 @@ final class MoleService {
     private var runningProcess: Process?
 
     private var executableURL: URL? {
-        if let override = ProcessInfo.processInfo.environment["MOLE_PATH"], fileManager.isExecutableFile(atPath: override) {
+        #if APPSTORE
+        // Sandboxed builds can't launch external tools; the native engine is used instead.
+        return nil
+        #else
+        #if DEBUG
+        if let override = ProcessInfo.processInfo.environment["MOLE_PATH"], Self.isSafeExecutable(atPath: override) {
             return URL(fileURLWithPath: override)
         }
+        #endif
 
-        let candidates = [
-            "/opt/homebrew/bin/mo",
-            "/usr/local/bin/mo",
-            "/Users/Shared/homebrew/bin/mo"
-        ]
-
-        if let candidate = candidates.first(where: { fileManager.isExecutableFile(atPath: $0) }) {
-            return URL(fileURLWithPath: candidate)
-        }
-
-        let pathDirectories = (ProcessInfo.processInfo.environment["PATH"] ?? "")
-            .split(separator: ":")
-            .map(String.init)
-
-        return pathDirectories
-            .map { URL(fileURLWithPath: $0).appendingPathComponent("mo") }
-            .first(where: { fileManager.isExecutableFile(atPath: $0.path) })
+        // Only Homebrew's standard prefixes. Shared or PATH-relative locations
+        // could let another account plant a binary that runs as this user.
+        let candidates = ["/opt/homebrew/bin/mo", "/usr/local/bin/mo"]
+        return candidates.first(where: Self.isSafeExecutable(atPath:)).map { URL(fileURLWithPath: $0) }
+        #endif
     }
 
     var isAvailable: Bool { executableURL != nil }
+
+    /// The binary (after resolving symlinks) and its folder must be owned by this
+    /// user or root and must not be writable by group or others.
+    private static func isSafeExecutable(atPath path: String) -> Bool {
+        let fm = FileManager.default
+        let resolved = (path as NSString).resolvingSymlinksInPath
+        guard fm.isExecutableFile(atPath: resolved) else { return false }
+        for candidate in [resolved, (resolved as NSString).deletingLastPathComponent] {
+            guard let attrs = try? fm.attributesOfItem(atPath: candidate),
+                  let owner = (attrs[.ownerAccountID] as? NSNumber)?.uint32Value,
+                  let perms = (attrs[.posixPermissions] as? NSNumber)?.uint16Value else { return false }
+            if owner != getuid() && owner != 0 { return false }
+            if perms & 0o022 != 0 { return false }
+        }
+        return true
+    }
 
     func cancelCurrentOperation() {
         processLock.lock()

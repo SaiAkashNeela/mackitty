@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import Security
 
 @MainActor
 final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownloadDelegate {
@@ -35,14 +36,17 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
     }
 
     func checkForUpdates(silent: Bool = false) async {
+        // App Store builds are updated by the App Store.
+        if isAppStoreBuild { return }
         isChecking = true
         if !silent {
             statusMessage = "Checking for updates…"
         }
 
+        // Only the GitHub Releases API is trusted. The downloaded build is
+        // additionally verified against MacKitty's signing identity before install.
         let endpoints = [
-            "https://api.github.com/repos/SaiAkashNeela/mackitty/releases/latest",
-            "https://mackitty.com/api/version.json"
+            "https://api.github.com/repos/SaiAkashNeela/mackitty/releases/latest"
         ]
 
         var foundVersion: String?
@@ -65,25 +69,25 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
                     continue
                 }
 
-                if let rawVer = (json["tag_name"] as? String) ?? (json["version"] as? String) {
-                    let cleanVer = rawVer.replacingOccurrences(of: "v", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                if let rawVer = (json["tag_name"] as? String) ?? (json["version"] as? String),
+                   let cleanVer = Self.sanitizedVersion(rawVer) {
                     foundVersion = cleanVer
 
                     if let body = json["body"] as? String {
                         foundNotes = body
                     }
 
-                    if let htmlUrl = json["html_url"] as? String {
+                    if let htmlUrl = json["html_url"] as? String, Self.isTrustedURL(htmlUrl) {
                         foundReleaseURL = htmlUrl
                     }
 
                     // Look for zip asset first (best for in-place replacement), then dmg asset
                     if let assets = json["assets"] as? [[String: Any]] {
                         if let zipAsset = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".zip") == true }),
-                           let zipUrl = zipAsset["browser_download_url"] as? String {
+                           let zipUrl = zipAsset["browser_download_url"] as? String, Self.isTrustedURL(zipUrl) {
                             foundAssetURL = zipUrl
                         } else if let dmgAsset = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".dmg") == true }),
-                                  let dmgUrl = dmgAsset["browser_download_url"] as? String {
+                                  let dmgUrl = dmgAsset["browser_download_url"] as? String, Self.isTrustedURL(dmgUrl) {
                             foundAssetURL = dmgUrl
                         }
                     }
@@ -104,7 +108,7 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
             self.isUpdateAvailable = available
             self.releaseNotes = foundNotes
             self.updateURL = foundReleaseURL ?? "https://github.com/SaiAkashNeela/mackitty/releases/latest"
-            self.packageAssetURL = foundAssetURL ?? foundReleaseURL
+            self.packageAssetURL = foundAssetURL
             self.statusMessage = available ? "New version v\(newVersion) is available!" : "MacKitty is up to date (v\(self.currentVersion))"
         } else {
             if !self.isUpdateAvailable {
@@ -198,6 +202,15 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
 
         let targetFilename = downloadTask.originalRequest?.url?.lastPathComponent ?? "MacKittyPackage"
         let destURL = tempDir.appendingPathComponent(targetFilename)
+        session.finishTasksAndInvalidate()
+
+        guard let http = downloadTask.response as? HTTPURLResponse, http.statusCode == 200 else {
+            Task { @MainActor in
+                self.downloadContinuation?.resume(throwing: NSError(domain: "MacKittyUpdate", code: 5, userInfo: [NSLocalizedDescriptionKey: "The update server returned an error. Please try again later."]))
+                self.downloadContinuation = nil
+            }
+            return
+        }
 
         do {
             try FileManager.default.moveItem(at: location, to: destURL)
@@ -215,6 +228,7 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
 
     nonisolated func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
+            session.invalidateAndCancel()
             Task { @MainActor in
                 self.downloadContinuation?.resume(throwing: error)
                 self.downloadContinuation = nil
@@ -224,7 +238,7 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
 
     // MARK: - Extraction & Verification
 
-    private func extractAndVerifyPackage(at packageURL: URL) async throws -> URL {
+    nonisolated private func extractAndVerifyPackage(at packageURL: URL) async throws -> URL {
         let fileManager = FileManager.default
         let extractDir = packageURL.deletingLastPathComponent().appendingPathComponent("Extracted")
         try fileManager.createDirectory(at: extractDir, withIntermediateDirectories: true)
@@ -253,6 +267,9 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
             hdiutil.arguments = ["attach", "-nobrowse", "-readonly", "-mountpoint", mountPoint.path, packageURL.path]
             try hdiutil.run()
             hdiutil.waitUntilExit()
+            guard hdiutil.terminationStatus == 0 else {
+                throw NSError(domain: "MacKittyUpdate", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to open the update disk image."])
+            }
 
             let appInMount = mountPoint.appendingPathComponent("MacKitty.app")
             let appInExtract = extractDir.appendingPathComponent("MacKitty.app")
@@ -262,6 +279,9 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
                 cp.arguments = ["-R", appInMount.path, appInExtract.path]
                 try cp.run()
                 cp.waitUntilExit()
+                guard cp.terminationStatus == 0 else {
+                    throw NSError(domain: "MacKittyUpdate", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to copy the update from the disk image."])
+                }
             }
 
             // Detach DMG
@@ -282,50 +302,83 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
             throw NSError(domain: "MacKittyUpdate", code: 2, userInfo: [NSLocalizedDescriptionKey: "MacKitty.app not found inside update package."])
         }
 
-        // Verify code signature integrity
-        let codesign = Process()
-        codesign.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        codesign.arguments = ["--verify", "--deep", "--strict", appURL.path]
-        try codesign.run()
-        codesign.waitUntilExit()
-
-        guard codesign.terminationStatus == 0 else {
-            throw NSError(domain: "MacKittyUpdate", code: 3, userInfo: [NSLocalizedDescriptionKey: "Code signature verification failed on downloaded update."])
-        }
-
+        try Self.verifyTrustedBuild(at: appURL)
         return appURL
     }
 
     // MARK: - In-Place Replacement & Relaunch
 
     private func replaceAndRelaunch(extractedAppURL: URL) throws {
-        let currentAppURL = Bundle.main.bundleURL
-        let targetPath: String
-
-        if currentAppURL.path.contains("/Applications") {
-            targetPath = currentAppURL.path
-        } else if FileManager.default.isWritableFile(atPath: "/Applications") {
-            targetPath = "/Applications/MacKitty.app"
-        } else {
-            targetPath = currentAppURL.path
+        let target = Bundle.main.bundleURL
+        // Only ever replace an installed MacKitty bundle, never an arbitrary directory.
+        guard target.pathExtension == "app",
+              Bundle(url: target)?.bundleIdentifier == Self.bundleIdentifier else {
+            throw NSError(domain: "MacKittyUpdate", code: 6, userInfo: [NSLocalizedDescriptionKey: "MacKitty isn't running from an installed app bundle. Please download the update manually."])
         }
 
-        // Self-executing bash script that replaces the app and relaunches
-        let script = """
-        sleep 0.8
-        rm -rf "\(targetPath)"
-        cp -R "\(extractedAppURL.path)" "\(targetPath)"
-        xattr -cr "\(targetPath)" 2>/dev/null || true
-        touch "\(targetPath)"
-        open -n "\(targetPath)"
-        """
+        // Atomic swap (rename on the same volume); the old bundle is removed only on success.
+        _ = try FileManager.default.replaceItemAt(target, withItemAt: extractedAppURL)
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/bash")
-        process.arguments = ["-c", script]
-        try process.run()
+        // Relaunch after this process exits. The path is passed as an argument,
+        // never interpolated into the shell script.
+        let relaunch = Process()
+        relaunch.executableURL = URL(fileURLWithPath: "/bin/sh")
+        relaunch.arguments = ["-c", "sleep 1; /usr/bin/open -n \"$1\"", "mackitty-relaunch", target.path]
+        try relaunch.run()
 
         NSApp.terminate(nil)
+    }
+
+    // MARK: - Trust checks
+
+    nonisolated static let bundleIdentifier = "com.mackitty.app"
+    nonisolated static let teamIdentifier = "8GG7J6LQZL"
+
+    /// The downloaded app must be MacKitty, signed by MacKitty's Developer ID team,
+    /// with every nested component intact, and accepted by Gatekeeper (notarized).
+    nonisolated static func verifyTrustedBuild(at appURL: URL) throws {
+        let failure = { (detail: String) in
+            NSError(domain: "MacKittyUpdate", code: 3, userInfo: [NSLocalizedDescriptionKey: "The downloaded update failed verification (\(detail)). It was not installed."])
+        }
+
+        guard Bundle(url: appURL)?.bundleIdentifier == bundleIdentifier else { throw failure("unexpected app") }
+
+        var staticCode: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(appURL as CFURL, [], &staticCode) == errSecSuccess, let staticCode else {
+            throw failure("unreadable signature")
+        }
+        let requirementText = "identifier \"\(bundleIdentifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(teamIdentifier)\""
+        var requirement: SecRequirement?
+        guard SecRequirementCreateWithString(requirementText as CFString, [], &requirement) == errSecSuccess, let requirement else {
+            throw failure("requirement")
+        }
+        let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate | kSecCSCheckNestedCode)
+        guard SecStaticCodeCheckValidity(staticCode, flags, requirement) == errSecSuccess else {
+            throw failure("signature")
+        }
+
+        // Gatekeeper assessment confirms Apple notarized this exact build.
+        let spctl = Process()
+        spctl.executableURL = URL(fileURLWithPath: "/usr/sbin/spctl")
+        spctl.arguments = ["--assess", "--type", "execute", appURL.path]
+        spctl.standardOutput = FileHandle.nullDevice
+        spctl.standardError = FileHandle.nullDevice
+        try spctl.run()
+        spctl.waitUntilExit()
+        guard spctl.terminationStatus == 0 else { throw failure("not notarized") }
+    }
+
+    /// Release downloads must come from GitHub over HTTPS.
+    nonisolated static func isTrustedURL(_ string: String) -> Bool {
+        guard let url = URL(string: string), url.scheme == "https", let host = url.host?.lowercased() else { return false }
+        return ["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"].contains(host)
+    }
+
+    /// Accepts "v1.2.3" or "1.2.3"; rejects anything that isn't a plain dotted version.
+    nonisolated static func sanitizedVersion(_ raw: String) -> String? {
+        var v = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if v.hasPrefix("v") || v.hasPrefix("V") { v.removeFirst() }
+        return v.range(of: #"^\d+(\.\d+){0,3}$"#, options: .regularExpression) != nil ? v : nil
     }
 
     private func isVersion(_ v1: String, higherThan v2: String) -> Bool {

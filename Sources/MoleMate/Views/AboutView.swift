@@ -58,7 +58,8 @@ struct AboutView: View {
             .padding(12)
             .glassPanel(radius: 10)
 
-            // Update status section
+            // Update status section (App Store builds are updated by the App Store)
+            #if !APPSTORE
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(updater.statusMessage)
@@ -101,6 +102,7 @@ struct AboutView: View {
                 }
             }
             .padding(.horizontal, 4)
+            #endif
 
             Text("© 2026 MacKitty. All rights reserved.")
                 .font(.system(size: 10))

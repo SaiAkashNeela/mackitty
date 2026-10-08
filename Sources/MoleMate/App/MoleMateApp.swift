@@ -66,6 +66,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func checkMoveToApplicationsIfNeeded() {
+        // The App Store installs into /Applications itself.
+        if isAppStoreBuild { return }
         let bundlePath = Bundle.main.bundlePath
         // Only prompt if running from a mounted DMG volume or Downloads folder
         guard !bundlePath.hasPrefix("/Applications"),
@@ -91,11 +93,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
                 do {
                     if FileManager.default.fileExists(atPath: destinationURL.path) {
-                        try FileManager.default.removeItem(at: destinationURL)
+                        // Only replace an existing MacKitty, and move it to the Trash rather than deleting it.
+                        guard Bundle(url: destinationURL)?.bundleIdentifier == Bundle.main.bundleIdentifier else {
+                            throw NSError(domain: "MacKitty", code: 1, userInfo: [NSLocalizedDescriptionKey: "Another app named MacKitty is already in Applications. Please move it manually."])
+                        }
+                        try FileManager.default.trashItem(at: destinationURL, resultingItemURL: nil)
                     }
                     try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
 
-                    NSWorkspace.shared.openApplication(at: destinationURL, configuration: NSWorkspace.OpenConfiguration()) { _, _ in
+                    NSWorkspace.shared.openApplication(at: destinationURL, configuration: NSWorkspace.OpenConfiguration()) { _, error in
+                        guard error == nil else { return }
                         DispatchQueue.main.async {
                             NSApp.terminate(nil)
                         }

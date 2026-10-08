@@ -113,11 +113,7 @@ final class StatusBarController: NSObject {
         openItem.target = self
         menu.addItem(openItem)
 
-        let cleanItem = NSMenuItem(title: "Clean My Mac Now", action: #selector(cleanNow), keyEquivalent: "c")
-        cleanItem.target = self
-        menu.addItem(cleanItem)
-
-        let scanItem = NSMenuItem(title: "Scan System", action: #selector(analyzeSystem), keyEquivalent: "s")
+        let scanItem = NSMenuItem(title: "Scan My Mac", action: #selector(analyzeSystem), keyEquivalent: "s")
         scanItem.target = self
         menu.addItem(scanItem)
 
@@ -168,16 +164,11 @@ final class StatusBarController: NSObject {
         model?.showAbout = true
     }
 
-    @objc private func cleanNow() {
-        openApp()
-        model?.selectAllCleanupAreas()
-        model?.clean()
-    }
-
     @objc private func analyzeSystem() {
         openApp()
+        model?.selectTopTab(.clean)
         model?.resetForFreshScan()
-        model?.scan()
+        model?.requestScan()
     }
 
     @objc private func quitApp() {

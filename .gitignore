@@ -37,3 +37,4 @@ Thumbs.db
 *.log
 .scratch/
 scratch/
+.build-appstore/

@@ -83,11 +83,13 @@ struct TrayMiniDashboardView: View {
     private var footer: some View {
         HStack(spacing: 4) {
             TrayTextButton(title: "About", action: openAbout)
+            #if !APPSTORE
             if model.updater.isUpdateAvailable {
                 TrayTextButton(title: "Update to \(model.updater.latestVersion)", color: Theme.accentStrong, action: openUpdate)
             } else {
                 TrayTextButton(title: "Check for Updates", action: checkUpdate)
             }
+            #endif
             Spacer()
             TrayTextButton(title: "Quit", action: quitApp)
         }

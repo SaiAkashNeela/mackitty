@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 struct NativeScanResult {
     let categories: [CleanupCategory]
@@ -80,8 +81,32 @@ final class NativeCleanerService: @unchecked Sendable {
         )
     ]
 
+    /// Children of a target that must never be touched. For the catch-all
+    /// "Other App Caches" this also protects Apple's own caches (iCloud, CloudKit…)
+    /// and the caches of apps that are running right now.
+    private func protectedNames(in url: URL, for spec: TargetSpec) -> Set<String> {
+        var names = spec.excludedSubpaths
+        guard spec.id == "application-cache",
+              let children = try? fileManager.contentsOfDirectory(atPath: url.path) else { return names }
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() })
+        for child in children {
+            let lower = child.lowercased()
+            if lower.hasPrefix("com.apple.") || running.contains(lower) {
+                names.insert(child)
+            }
+        }
+        return names
+    }
+
     private func resolveURL(for relativePath: String) -> URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(relativePath)
+        #if APPSTORE
+        // In the sandbox the user-granted home folder replaces the container home.
+        // Without a grant, point at a path that doesn't exist so nothing is touched.
+        let home = SandboxAccess.homeURL() ?? URL(fileURLWithPath: "/nonexistent-mackitty-home")
+        return home.appendingPathComponent(relativePath)
+        #else
+        return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(relativePath)
+        #endif
     }
 
     /// Calculate the real size and file count of a directory
@@ -141,7 +166,7 @@ final class NativeCleanerService: @unchecked Sendable {
             let displayPath = "~/" + target.relativePath
             onProgress(target.name, displayPath, totalItems)
 
-            let (bytes, count) = calculateDirectoryMetrics(at: url, excluding: target.excludedSubpaths)
+            let (bytes, count) = calculateDirectoryMetrics(at: url, excluding: protectedNames(in: url, for: target))
             totalBytes += bytes
             totalItems += count
             onProgress(target.name, displayPath, totalItems)
@@ -191,7 +216,7 @@ final class NativeCleanerService: @unchecked Sendable {
             let beforeBytes = category.sizeBytes
             _ = await cleanDocker(onProgress: onProgress)
             let after = await inspectDockerMetrics()
-            let freed = max(beforeBytes - (after?.bytes ?? 0), beforeBytes)
+            let freed = max(beforeBytes - (after?.bytes ?? 0), 0)
             return freed
         }
 
@@ -212,12 +237,14 @@ final class NativeCleanerService: @unchecked Sendable {
         }
 
         var cleanedBytes: Int64 = 0
+        let protected = protectedNames(in: url, for: spec)
 
         for itemURL in contents {
+            if Task.isCancelled { break }
             let itemName = itemURL.lastPathComponent
-            // Skip hidden system files and any excluded subpaths
+            // Skip hidden system files and any protected or excluded subpaths
             if itemName.hasPrefix(".") && itemName != ".npm" { continue }
-            if spec.excludedSubpaths.contains(itemName) { continue }
+            if protected.contains(itemName) { continue }
 
             onProgress("Removing \(category.name) · \(itemName)")
 
@@ -239,6 +266,9 @@ final class NativeCleanerService: @unchecked Sendable {
     // MARK: - Docker Integration
 
     private var dockerExecutableURL: URL? {
+        #if APPSTORE
+        return nil
+        #else
         let candidates = [
             "/usr/local/bin/docker",
             "/opt/homebrew/bin/docker",
@@ -249,6 +279,7 @@ final class NativeCleanerService: @unchecked Sendable {
             return URL(fileURLWithPath: found)
         }
         return nil
+        #endif
     }
 
     private func runDockerCommand(arguments: [String], timeoutSeconds: Double = 3.0) async -> String? {

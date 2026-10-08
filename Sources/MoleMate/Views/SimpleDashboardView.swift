@@ -1106,6 +1106,7 @@ private struct ScanningScreen: View {
 private struct TriageScreen: View {
     @EnvironmentObject private var model: DashboardModel
     @State private var sortBySize = true
+    @State private var confirmClean = false
 
     /// Rows keep their original index so each category keeps its colour when re-sorted.
     private var rows: [(index: Int, category: CleanupCategory)] {
@@ -1184,12 +1185,23 @@ private struct TriageScreen: View {
                         .contentTransition(.numericText())
                 }
                 Spacer()
-                Button(action: model.primaryAction) {
+                Button { confirmClean = true } label: {
                     Text("Clean \(model.selectedCleanupSizeText)")
                 }
                 .buttonStyle(PrimaryButtonStyle(isEnabled: model.hasSelectedCleanup))
                 .disabled(!model.hasSelectedCleanup)
                 .keyboardShortcut(.defaultAction)
+                .confirmationDialog(
+                    "Permanently remove \(model.selectedCleanupSizeText)?",
+                    isPresented: $confirmClean,
+                    titleVisibility: .visible
+                ) {
+                    Button("Clean \(model.selectedCleanupSizeText)", role: .destructive) { model.clean() }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text(model.cleanupCategories.filter(\.isSelected).map(\.name).joined(separator: ", ")
+                         + "\n\nThese files are deleted, not moved to the Trash. Apps rebuild caches as needed.")
+                }
             }
             .padding(16)
             .glassPanel()
