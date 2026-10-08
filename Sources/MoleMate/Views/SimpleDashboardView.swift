@@ -504,29 +504,44 @@ private struct NetworkTile: View {
 
 private struct HistoryChartCard: View {
     @EnvironmentObject private var model: DashboardModel
-    @State private var selected: Int?
+    @State private var selected: String?
 
-    private struct Bar: Identifiable {
-        let id: Int
-        let mb: Double
-        let label: String
-        let sizeText: String
+    /// One bar per day: cleanups on the same day are added together so every
+    /// label on the axis is a distinct date.
+    private struct DayBar: Identifiable {
+        let id: String        // axis label, unique per day
+        let date: Date
+        let bytes: Int64
+        let runs: Int
+        var gb: Double { Double(bytes) / 1_000_000_000 }
+        var sizeText: String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
     }
 
-    private var bars: [Bar] {
-        let recent = Array(model.history.prefix(8).reversed())
-        return recent.enumerated().map { i, e in
-            Bar(id: i, mb: Double(e.bytes) / 1_000_000, label: e.dayText, sizeText: e.sizeText)
+    private var bars: [DayBar] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: model.history) { calendar.startOfDay(for: $0.date) }
+        let days = grouped.keys.sorted().suffix(7)
+        let sameYear = days.allSatisfy { calendar.isDate($0, equalTo: Date(), toGranularity: .year) }
+        return days.map { day in
+            let entries = grouped[day] ?? []
+            let label = sameYear
+                ? day.formatted(.dateTime.day().month(.abbreviated))
+                : day.formatted(.dateTime.day().month(.abbreviated).year(.twoDigits))
+            return DayBar(id: label, date: day, bytes: entries.reduce(0) { $0 + $1.bytes }, runs: entries.count)
         }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            CardTitle(title: "Space reclaimed per cleanup", icon: "chart.bar") {
-                if let i = selected, let bar = bars.first(where: { $0.id == i }) {
-                    Text("\(bar.label) · \(bar.sizeText)")
+            CardTitle(title: "Space reclaimed per day", icon: "chart.bar") {
+                if let label = selected, let bar = bars.first(where: { $0.id == label }) {
+                    Text("\(bar.id) · \(bar.sizeText) · \(bar.runs) cleanup\(bar.runs == 1 ? "" : "s")")
                         .font(Theme.numeric(11.5, .medium))
                         .foregroundStyle(Theme.accentStrong)
+                } else if !bars.isEmpty {
+                    Text("Last \(bars.count) day\(bars.count == 1 ? "" : "s") with cleanups")
+                        .font(Theme.body(11.5))
+                        .foregroundStyle(Theme.textTertiary)
                 }
             }
 
@@ -534,7 +549,7 @@ private struct HistoryChartCard: View {
                 ZStack {
                     // ghost bars hint at what will appear
                     HStack(alignment: .bottom, spacing: 14) {
-                        ForEach([0.35, 0.6, 0.45, 0.8, 0.5, 0.7, 0.4, 0.55], id: \.self) { h in
+                        ForEach([0.35, 0.6, 0.45, 0.8, 0.5, 0.7, 0.4], id: \.self) { h in
                             RoundedRectangle(cornerRadius: 4).fill(Theme.canvasDeep)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 90 * h)
@@ -545,7 +560,7 @@ private struct HistoryChartCard: View {
                         Text("No cleanups yet")
                             .font(Theme.body(12.5, .medium))
                             .foregroundStyle(Theme.textSecondary)
-                        Text("Each cleanup you run will appear here.")
+                        Text("Each day you clean will appear here.")
                             .font(Theme.body(11.5))
                             .foregroundStyle(Theme.textTertiary)
                     }
@@ -555,31 +570,38 @@ private struct HistoryChartCard: View {
                 }
             } else {
                 Chart(bars) { bar in
-                    BarMark(x: .value("Cleanup", bar.id), y: .value("MB", bar.mb), width: .ratio(0.55))
-                        .cornerRadius(4)
-                        .foregroundStyle(selected == nil || selected == bar.id ? Theme.accent : Theme.accent.opacity(0.35))
+                    BarMark(
+                        x: .value("Day", bar.id),
+                        y: .value("GB", bar.gb),
+                        width: .fixed(min(44, 360 / Double(max(bars.count, 1))))
+                    )
+                    .cornerRadius(5)
+                    .foregroundStyle(selected == nil || selected == bar.id ? Theme.accent : Theme.accent.opacity(0.35))
+                    .annotation(position: .top, spacing: 3) {
+                        Text(bar.sizeText)
+                            .font(Theme.numeric(10, .medium))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
                 .chartXSelection(value: $selected)
                 .chartXAxis {
-                    AxisMarks(values: bars.map(\.id)) { value in
-                        AxisValueLabel {
-                            if let i = value.as(Int.self), let bar = bars.first(where: { $0.id == i }) {
-                                Text(bar.label).font(Theme.body(10))
-                            }
-                        }
+                    AxisMarks { _ in
+                        AxisValueLabel().font(Theme.body(10))
                     }
                 }
                 .chartYAxis {
-                    AxisMarks(position: .leading) { value in
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
                         AxisGridLine().foregroundStyle(Theme.line)
                         AxisValueLabel {
-                            if let mb = value.as(Double.self) {
-                                Text(mb >= 1000 ? String(format: "%.1f GB", mb / 1000) : "\(Int(mb)) MB").font(Theme.body(10))
+                            if let gb = value.as(Double.self) {
+                                Text(gb == 0 ? "0" : (gb >= 1 ? "\(Int(gb)) GB" : "\(Int(gb * 1000)) MB"))
+                                    .font(Theme.body(10))
                             }
                         }
                     }
                 }
-                .chartXScale(domain: -0.6...(Double(bars.count) - 0.4))
+                // headroom so the value labels above the tallest bar aren't clipped
+                .chartYScale(domain: 0...max((bars.map(\.gb).max() ?? 1) * 1.25, 0.01))
             }
         }
         .padding(16)
