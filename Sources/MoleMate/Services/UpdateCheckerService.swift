@@ -21,6 +21,7 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
     @Published var showUpdateModal: Bool = false
 
     private var downloadTask: URLSessionDownloadTask?
+    private var periodicCheck: Timer?
     private var downloadContinuation: CheckedContinuation<URL, Error>?
 
     var currentVersion: String {
@@ -32,6 +33,13 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
         // Run a lightweight background update check on startup
         Task { [weak self] in
             await self?.checkForUpdates(silent: true)
+        }
+        // MacKitty often lives in the menu bar for days; keep checking quietly.
+        periodicCheck = Timer.scheduledTimer(withTimeInterval: 6 * 60 * 60, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, !self.isInstalling else { return }
+                await self.checkForUpdates(silent: true)
+            }
         }
     }
 

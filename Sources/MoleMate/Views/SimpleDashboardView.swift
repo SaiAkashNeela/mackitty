@@ -910,7 +910,7 @@ private struct VideoBannerCard<Content: View>: View {
             .frame(height: 200)
             .clipped()
 
-            LinearProgress(value: progress)
+            LinearProgress(value: progress, isActive: progress < 1)
                 .padding(.horizontal, 20)
                 .padding(.top, 18)
 
@@ -1037,17 +1037,75 @@ private struct MemoryStatCard: View {
 private struct LinearProgress: View {
     let value: Double
     var color: Color = Theme.accent
+    /// While work is running, a light sweep travels across the bar so it never looks frozen.
+    var isActive = false
 
     var body: some View {
         GeometryReader { proxy in
+            let filled = max(6, proxy.size.width * min(max(value, 0), 1))
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.canvasDeep)
                 Capsule().fill(color)
-                    .frame(width: max(6, proxy.size.width * min(max(value, 0), 1)))
+                    .frame(width: filled)
+                    .overlay {
+                        if isActive {
+                            TimelineView(.animation) { timeline in
+                                let phase = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6
+                                LinearGradient(colors: [.white.opacity(0), .white.opacity(0.55), .white.opacity(0)], startPoint: .leading, endPoint: .trailing)
+                                    .frame(width: 80)
+                                    .offset(x: -80 + phase * (filled + 80))
+                            }
+                            .frame(width: filled, alignment: .leading)
+                            .clipShape(Capsule())
+                        }
+                    }
             }
         }
         .frame(height: 6)
         .animation(.easeOut(duration: 0.4), value: value)
+    }
+}
+
+/// Animated "working" line: bouncing dots plus a reassurance note when the
+/// percentage hasn't moved for a few seconds (large folders take time).
+private struct WorkingStatus: View {
+    let text: String
+    let progress: Double
+    @State private var lastChange = Date()
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.35)) { timeline in
+            let step = Int(timeline.date.timeIntervalSinceReferenceDate / 0.35) % 3
+            let stalled = timeline.date.timeIntervalSince(lastChange) > 3
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        ForEach(0..<3) { i in
+                            Circle()
+                                .fill(Theme.accent)
+                                .frame(width: 5, height: 5)
+                                .offset(y: i == step ? -3 : 0)
+                                .opacity(i == step ? 1 : 0.4)
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.25), value: step)
+                    Text(text)
+                        .font(Theme.body(12.5, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                }
+                if stalled {
+                    Text("Still working. Large folders can take a moment.")
+                        .font(Theme.body(11.5))
+                        .foregroundStyle(Theme.textTertiary)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.3), value: stalled)
+        }
+        .onChange(of: progress) { _, _ in lastChange = Date() }
     }
 }
 
@@ -1065,6 +1123,8 @@ private struct ScanningScreen: View {
                 progress: model.scanProgress
             ) {
                 VStack(spacing: 14) {
+                    WorkingStatus(text: model.scanPhase, progress: model.scanProgress)
+
                     HStack {
                         Label("\(model.scanFilesInspected.formatted()) files inspected", systemImage: "doc.text.magnifyingglass")
                             .contentTransition(.numericText())
@@ -1152,7 +1212,7 @@ private struct TriageScreen: View {
                 HStack {
                     Text("Location").frame(maxWidth: .infinity, alignment: .leading)
                     Text("Size").frame(width: 90, alignment: .trailing)
-                    Color.clear.frame(width: 28)
+                    Color.clear.frame(width: 28, height: 1)
                 }
                 .font(Theme.body(11, .medium))
                 .foregroundStyle(Theme.textTertiary)
@@ -1190,23 +1250,107 @@ private struct TriageScreen: View {
                 }
                 .buttonStyle(PrimaryButtonStyle(isEnabled: model.hasSelectedCleanup))
                 .disabled(!model.hasSelectedCleanup)
-                .keyboardShortcut(.defaultAction)
-                .confirmationDialog(
-                    "Permanently remove \(model.selectedCleanupSizeText)?",
-                    isPresented: $confirmClean,
-                    titleVisibility: .visible
-                ) {
-                    Button("Clean \(model.selectedCleanupSizeText)", role: .destructive) { model.clean() }
-                    Button("Cancel", role: .cancel) {}
-                } message: {
-                    Text(model.cleanupCategories.filter(\.isSelected).map(\.name).joined(separator: ", ")
-                         + "\n\nThese files are deleted, not moved to the Trash. Apps rebuild caches as needed.")
-                }
+                .keyboardShortcut(confirmClean ? nil : .defaultAction)
             }
             .padding(16)
             .glassPanel()
         }
         .pageFrame()
+        .overlay {
+            if confirmClean {
+                CleanConfirmSheet(isPresented: $confirmClean)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: confirmClean)
+    }
+}
+
+/// In-app confirmation before anything is deleted (replaces the system alert).
+private struct CleanConfirmSheet: View {
+    @EnvironmentObject private var model: DashboardModel
+    @Binding var isPresented: Bool
+    @State private var appeared = false
+
+    private var selected: [CleanupCategory] { model.cleanupCategories.filter(\.isSelected) }
+
+    var body: some View {
+        ZStack {
+            Theme.ink.opacity(0.28)
+                .ignoresSafeArea()
+                .onTapGesture { isPresented = false }
+
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.danger)
+                        .frame(width: 40, height: 40)
+                        .background(Theme.danger.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Clean \(model.selectedCleanupSizeText)?")
+                            .font(Theme.display(17, .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("\(selected.count) area\(selected.count == 1 ? "" : "s") will be emptied")
+                            .font(Theme.body(12.5))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+
+                VStack(spacing: 0) {
+                    ForEach(Array(selected.prefix(5).enumerated()), id: \.element.id) { index, category in
+                        HStack {
+                            Text(category.name)
+                                .font(Theme.body(12.5))
+                                .foregroundStyle(Theme.textPrimary)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(category.id == DashboardModel.moleCategoryID ? "Varies" : category.sizeText)
+                                .font(Theme.numeric(12.5, .medium))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        .padding(.vertical, 7)
+                        .overlay(alignment: .top) { if index > 0 { Theme.line.frame(height: 1) } }
+                    }
+                    if selected.count > 5 {
+                        Text("and \(selected.count - 5) more")
+                            .font(Theme.body(12))
+                            .foregroundStyle(Theme.textTertiary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 7)
+                            .overlay(alignment: .top) { Theme.line.frame(height: 1) }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                Label("Files are deleted permanently, not moved to the Trash. Apps rebuild caches when needed.", systemImage: "info.circle")
+                    .font(Theme.body(12))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 10) {
+                    Spacer()
+                    Button("Cancel") { isPresented = false }
+                        .buttonStyle(GhostButtonStyle())
+                        .keyboardShortcut(.cancelAction)
+                    Button("Clean \(model.selectedCleanupSizeText)") {
+                        isPresented = false
+                        model.clean()
+                    }
+                    .buttonStyle(PrimaryButtonStyle(tint: Theme.danger))
+                    .keyboardShortcut(.defaultAction)
+                }
+            }
+            .padding(22)
+            .frame(width: 420)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
+            .shadow(color: Theme.ink.opacity(0.2), radius: 30, y: 12)
+            .scaleEffect(appeared ? 1 : 0.94)
+            .opacity(appeared ? 1 : 0)
+            .onAppear { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { appeared = true } }
+        }
     }
 }
 
@@ -1299,7 +1443,9 @@ private struct CleaningScreen: View {
     var body: some View {
         VStack {
             Spacer()
-            VideoBannerCard(title: "Cleaning up", subtitle: model.cleanPhase, progress: model.cleanProgress) {
+            VideoBannerCard(title: "Cleaning up", subtitle: "Removing only the areas you selected.", progress: model.cleanProgress) {
+                WorkingStatus(text: model.cleanPhase, progress: model.cleanProgress)
+                    .padding(.bottom, 8)
                 if model.cleanLog.isEmpty {
                     Text("Preparing…")
                         .font(Theme.body(12.5))
