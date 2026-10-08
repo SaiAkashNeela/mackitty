@@ -506,42 +506,53 @@ private struct HistoryChartCard: View {
     @EnvironmentObject private var model: DashboardModel
     @State private var selected: String?
 
-    /// One bar per day: cleanups on the same day are added together so every
-    /// label on the axis is a distinct date.
-    private struct DayBar: Identifiable {
-        let id: String        // axis label, unique per day
+    /// One bar per cleanup, oldest to newest. Each bar's axis label carries the
+    /// date and time, so several cleanups on the same day stay distinguishable.
+    private struct RunBar: Identifiable {
+        let id: String
         let date: Date
         let bytes: Int64
-        let runs: Int
         var gb: Double { Double(bytes) / 1_000_000_000 }
         var sizeText: String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
+        var dayText: String { date.formatted(.dateTime.day().month(.abbreviated)) }
+        var timeText: String { date.formatted(.dateTime.hour().minute()) }
     }
 
-    private var bars: [DayBar] {
-        let calendar = Calendar.current
-        let grouped = Dictionary(grouping: model.history) { calendar.startOfDay(for: $0.date) }
-        let days = grouped.keys.sorted().suffix(7)
-        let sameYear = days.allSatisfy { calendar.isDate($0, equalTo: Date(), toGranularity: .year) }
-        return days.map { day in
-            let entries = grouped[day] ?? []
-            let label = sameYear
-                ? day.formatted(.dateTime.day().month(.abbreviated))
-                : day.formatted(.dateTime.day().month(.abbreviated).year(.twoDigits))
-            return DayBar(id: label, date: day, bytes: entries.reduce(0) { $0 + $1.bytes }, runs: entries.count)
-        }
+    /// Bars are coloured by size relative to the biggest cleanup shown.
+    private enum Tier: CaseIterable {
+        case small, medium, large
+        var label: String { switch self { case .small: "Small"; case .medium: "Medium"; case .large: "Large" } }
+        var color: Color { switch self { case .small: Theme.info; case .medium: Theme.accent; case .large: Theme.violet } }
+    }
+
+    private var bars: [RunBar] {
+        model.history.prefix(8).reversed().map { RunBar(id: $0.id.uuidString, date: $0.date, bytes: $0.bytes) }
+    }
+
+    private func tier(_ bar: RunBar) -> Tier {
+        let maxGB = max(bars.map(\.gb).max() ?? 0, 0.000_001)
+        let ratio = bar.gb / maxGB
+        return ratio >= 0.66 ? .large : (ratio >= 0.33 ? .medium : .small)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            CardTitle(title: "Space reclaimed per day", icon: "chart.bar") {
-                if let label = selected, let bar = bars.first(where: { $0.id == label }) {
-                    Text("\(bar.id) · \(bar.sizeText) · \(bar.runs) cleanup\(bar.runs == 1 ? "" : "s")")
+            CardTitle(title: "Space reclaimed per cleanup", icon: "chart.bar") {
+                if let id = selected, let bar = bars.first(where: { $0.id == id }) {
+                    Text("\(bar.dayText), \(bar.timeText) · \(bar.sizeText)")
                         .font(Theme.numeric(11.5, .medium))
                         .foregroundStyle(Theme.accentStrong)
                 } else if !bars.isEmpty {
-                    Text("Last \(bars.count) day\(bars.count == 1 ? "" : "s") with cleanups")
-                        .font(Theme.body(11.5))
-                        .foregroundStyle(Theme.textTertiary)
+                    HStack(spacing: 10) {
+                        ForEach(Tier.allCases, id: \.self) { t in
+                            HStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 2).fill(t.color).frame(width: 8, height: 8)
+                                Text(t.label)
+                                    .font(Theme.body(11))
+                                    .foregroundStyle(Theme.textTertiary)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -549,7 +560,7 @@ private struct HistoryChartCard: View {
                 ZStack {
                     // ghost bars hint at what will appear
                     HStack(alignment: .bottom, spacing: 14) {
-                        ForEach([0.35, 0.6, 0.45, 0.8, 0.5, 0.7, 0.4], id: \.self) { h in
+                        ForEach([0.35, 0.6, 0.45, 0.8, 0.5, 0.7, 0.4, 0.55], id: \.self) { h in
                             RoundedRectangle(cornerRadius: 4).fill(Theme.canvasDeep)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 90 * h)
@@ -560,7 +571,7 @@ private struct HistoryChartCard: View {
                         Text("No cleanups yet")
                             .font(Theme.body(12.5, .medium))
                             .foregroundStyle(Theme.textSecondary)
-                        Text("Each day you clean will appear here.")
+                        Text("Each cleanup you run will appear here.")
                             .font(Theme.body(11.5))
                             .foregroundStyle(Theme.textTertiary)
                     }
@@ -571,12 +582,12 @@ private struct HistoryChartCard: View {
             } else {
                 Chart(bars) { bar in
                     BarMark(
-                        x: .value("Day", bar.id),
+                        x: .value("Cleanup", bar.id),
                         y: .value("GB", bar.gb),
-                        width: .fixed(min(44, 360 / Double(max(bars.count, 1))))
+                        width: .fixed(min(40, 320 / Double(max(bars.count, 1))))
                     )
                     .cornerRadius(5)
-                    .foregroundStyle(selected == nil || selected == bar.id ? Theme.accent : Theme.accent.opacity(0.35))
+                    .foregroundStyle(tier(bar).color.opacity(selected == nil || selected == bar.id ? 1 : 0.35))
                     .annotation(position: .top, spacing: 3) {
                         Text(bar.sizeText)
                             .font(Theme.numeric(10, .medium))
@@ -585,8 +596,15 @@ private struct HistoryChartCard: View {
                 }
                 .chartXSelection(value: $selected)
                 .chartXAxis {
-                    AxisMarks { _ in
-                        AxisValueLabel().font(Theme.body(10))
+                    AxisMarks(values: bars.map(\.id)) { value in
+                        AxisValueLabel {
+                            if let id = value.as(String.self), let bar = bars.first(where: { $0.id == id }) {
+                                VStack(spacing: 0) {
+                                    Text(bar.dayText).font(Theme.body(10, .medium))
+                                    Text(bar.timeText).font(Theme.body(9)).foregroundStyle(Theme.textTertiary)
+                                }
+                            }
+                        }
                     }
                 }
                 .chartYAxis {
