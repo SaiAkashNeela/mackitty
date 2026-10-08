@@ -5,10 +5,11 @@
 MacKitty is a fast, 100% native Swift disk companion and cache reclaimer for macOS (Sonoma 14.0+ and Sequoia 15.0+). It safely recovers gigabytes of disk space from developer caches and intermediate build clutter without ever touching personal documents, photos, or Git projects.
 
 ## Core Features
-- **Developer-Focused Safe Purge**: Targets Xcode DerivedData, Homebrew bottle caches, npm/yarn cache archives, old downloads (.dmg files), and application crash logs.
-- **Strict Inviolable Safety Boundary**: Hard sandbox rules ensure `~/Documents`, `~/Desktop`, `~/Photos`, active `.git/` repositories, Keychain passwords, and macOS system files are never touched.
-- **Menu Bar Companion**: Quick one-click menu bar popup (`TrayMiniDashboardView`) for real-time CPU, RAM, disk space, and battery telemetry.
-- **100% Native Architecture**: Written in Swift and SwiftUI. Weighs only 18 MB, launches in 50ms, consumes 0% background CPU, and has zero telemetry or advertising trackers.
+- **Safe, Reviewed Cleanup**: Targets Xcode DerivedData, Safari/Chrome/Firefox caches, other app caches (skipping Apple's own and running apps), the npm cache, and app logs. Every cleanup is reviewed and confirmed by the user; Mole's broader clean set is an explicit opt-in.
+- **Strict Safety Boundary**: Only a fixed list of rebuildable cache and log folders is ever cleaned; `~/Documents`, `~/Desktop`, `~/Downloads`, Photos, `.git/` repositories, Keychain and macOS system files are never touched.
+- **One-Screen Dashboard & Menu Bar Popover**: Light, native dashboard with storage, live CPU/memory charts, battery, network and cleanup history; a menu bar popover shows the same at a glance.
+- **Verified Updates**: The built-in updater only installs builds signed by MacKitty's Developer ID team and notarized by Apple.
+- **100% Native Architecture**: Written in Swift and SwiftUI, with zero telemetry or advertising trackers.
 - **Universal Binary**: Optimized natively for Apple Silicon (M1, M2, M3, M4) and Intel x86_64 Macs.
 
 ## Common Questions & Answers
