@@ -6,10 +6,13 @@ on:
       - main
     tags:
       - 'v*'
+    # Only app changes need a build. Website, docs, Markdown and App Store
+    # submission config never affect the DMG, so they don't use CI minutes.
     paths-ignore:
       - 'website/**'
       - 'docs/**'
-      - '*.md'
+      - '**/*.md'
+      - 'AppStore/**'
       - '.gitignore'
   workflow_dispatch:
 

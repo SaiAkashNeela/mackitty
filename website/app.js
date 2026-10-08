@@ -49,15 +49,20 @@ function initAppDemo() {
 
   // Believable past cleanups (newest first) so the dashboard looks lived-in on first view.
   const DAY_MS = 86400000;
+  // daysAgo + hour of day, so same-day cleanups show distinct times like the app.
   const SEED_HISTORY = [
-    { daysAgo: 2, gb: 6.64, count: 5 },
-    { daysAgo: 4, gb: 2.37, count: 3 },
-    { daysAgo: 7, gb: 5.12, count: 4 },
-    { daysAgo: 10, gb: 13.9, count: 6 },
-    { daysAgo: 13, gb: 1.86, count: 3 },
-    { daysAgo: 17, gb: 8.75, count: 5 },
-    { daysAgo: 20, gb: 3.42, count: 4 },
-  ].map((h) => ({ gb: h.gb, count: h.count, date: Date.now() - h.daysAgo * DAY_MS - 3.5 * 3600000 }));
+    { daysAgo: 2, hour: 18.4, gb: 6.64, count: 5 },
+    { daysAgo: 2, hour: 9.2, gb: 2.37, count: 3 },
+    { daysAgo: 7, hour: 21.1, gb: 5.12, count: 4 },
+    { daysAgo: 10, hour: 14.6, gb: 13.9, count: 6 },
+    { daysAgo: 13, hour: 11.3, gb: 1.86, count: 3 },
+    { daysAgo: 17, hour: 16.8, gb: 8.75, count: 5 },
+    { daysAgo: 20, hour: 19.5, gb: 3.42, count: 4 },
+  ].map((h) => {
+    const d = new Date(Date.now() - h.daysAgo * DAY_MS);
+    d.setHours(Math.floor(h.hour), Math.round((h.hour % 1) * 60), 0, 0);
+    return { gb: h.gb, count: h.count, date: d.getTime() };
+  });
 
   const state = {
     tab: "clean",
@@ -464,9 +469,24 @@ function initAppDemo() {
     if (d.toDateString() === new Date().toDateString()) return "Today";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
+  function timeLabel(ts) {
+    return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
+  // Colour by size relative to the biggest bar shown (same rule as the app).
+  const TIERS = [
+    { key: "small", label: "Small" },
+    { key: "medium", label: "Medium" },
+    { key: "large", label: "Large" },
+  ];
+  function tierOf(gb, max) {
+    const r = gb / max;
+    return r >= 0.66 ? "large" : r >= 0.33 ? "medium" : "small";
+  }
+  const histLegend =
+    `<span class="mk-hist-legend">${TIERS.map((t) => `<span><i class="mk-tier-${t.key}"></i>${t.label}</span>`).join("")}</span>`;
 
   function renderHistory() {
-    histSel.textContent = "";
+    histSel.innerHTML = histLegend;
     if (!state.history.length) {
       histPlot.innerHTML = "";
       return;
@@ -485,9 +505,9 @@ function initAppDemo() {
       `<div class="mk-bars">${Array.from({ length: 8 }, (_, i) => {
         const b = bars[i];
         if (!b) return `<div></div>`;
-        return `<div class="mk-bar-slot" data-i="${i}"><span class="mk-bar-tip" style="bottom:${(b.gb / top) * 100}%">${fmt(b.gb)}</span><div class="mk-bar" data-h="${(b.gb / top) * 100}" style="height:0"></div></div>`;
+        return `<div class="mk-bar-slot" data-i="${i}"><span class="mk-bar-tip" style="bottom:${(b.gb / top) * 100}%">${fmt(b.gb)}</span><div class="mk-bar mk-tier-${tierOf(b.gb, max)}" data-h="${(b.gb / top) * 100}" style="height:0"></div></div>`;
       }).join("")}</div></div>` +
-      `<div class="mk-chart-x">${Array.from({ length: 8 }, (_, i) => `<span>${bars[i] ? dayLabel(bars[i].date) : ""}</span>`).join("")}</div></div>`;
+      `<div class="mk-chart-x">${Array.from({ length: 8 }, (_, i) => `<span>${bars[i] ? `${dayLabel(bars[i].date)}<small>${timeLabel(bars[i].date)}</small>` : ""}</span>`).join("")}</div></div>`;
 
     const barsEl = histPlot.querySelector(".mk-bars");
     histPlot.querySelectorAll(".mk-bar-slot").forEach((slot) => {
@@ -495,12 +515,12 @@ function initAppDemo() {
       slot.addEventListener("pointerenter", () => {
         slot.classList.add("sel");
         barsEl.classList.add("has-sel");
-        histSel.textContent = `${dayLabel(b.date)} · ${fmt(b.gb)}`;
+        histSel.textContent = `${dayLabel(b.date)}, ${timeLabel(b.date)} · ${fmt(b.gb)}`;
       });
       slot.addEventListener("pointerleave", () => {
         slot.classList.remove("sel");
         barsEl.classList.remove("has-sel");
-        histSel.textContent = "";
+        histSel.innerHTML = histLegend;
       });
     });
     requestAnimationFrame(() =>
@@ -968,3 +988,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
+/* ==========================================================================
+   Privacy / Terms modals (also reachable as /#privacy and /#terms)
+   ========================================================================== */
+(function initLegalModals() {
+  const modals = { privacy: document.getElementById("legal-privacy"), terms: document.getElementById("legal-terms") };
+  if (!modals.privacy || !modals.terms || typeof HTMLDialogElement === "undefined") return;
+
+  function open(name) {
+    const dlg = modals[name];
+    if (!dlg || dlg.open) return;
+    Object.values(modals).forEach((d) => d.open && d.close());
+    dlg.showModal();
+  }
+
+  document.querySelectorAll("[data-legal]").forEach((el) =>
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      open(el.dataset.legal);
+    })
+  );
+  Object.values(modals).forEach((dlg) => {
+    dlg.querySelector("[data-legal-close]").addEventListener("click", () => dlg.close());
+    // click on the dimmed backdrop closes
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener("close", () => {
+      if (location.hash === "#privacy" || location.hash === "#terms") history.replaceState(null, "", location.pathname + location.search);
+    });
+  });
+
+  const fromHash = () => {
+    const name = location.hash.replace("#", "");
+    if (name in modals) open(name);
+  };
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+})();

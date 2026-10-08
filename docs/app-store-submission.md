@@ -40,7 +40,7 @@ ID `com.mackitty.app`, SKU `mackitty-macos`.
 
 Fill in:
 - **Category**: Utilities.
-- **Privacy policy URL**: `https://mackitty.com/privacy.html`.
+- **Privacy policy URL**: `https://mackitty.com/#privacy`.
 - **App Privacy** questionnaire: *Data Not Collected* (the App Store build makes no
   network requests and has no telemetry).
 - **Screenshots**: at least one at 1280×800, 1440×900, 2560×1600 or 2880×1800.
