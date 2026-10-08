@@ -68,7 +68,7 @@ final class StatusBarController: NSObject {
         let pop = NSPopover()
         pop.behavior = .transient
         pop.animates = true
-        pop.appearance = NSAppearance(named: .darkAqua)
+        pop.appearance = NSAppearance(named: .aqua)
 
         let view = TrayMiniDashboardView(model: model, onClose: { [weak self] in
             self?.closePopover()

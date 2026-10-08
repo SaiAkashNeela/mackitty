@@ -11,22 +11,22 @@ struct MoleInstallModalView: View {
             // Header icon
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.12))
+                    .fill(Theme.accent.opacity(0.14))
                     .frame(width: 58, height: 58)
                 Image(systemName: "terminal.fill")
                     .font(.system(size: 26))
-                    .foregroundStyle(Color.blue)
+                    .foregroundStyle(Theme.accent)
             }
             .padding(.top, 6)
 
             VStack(spacing: 5) {
                 Text("Optional Power Engine: Mole CLI")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(Theme.display(18, .bold))
+                    .foregroundStyle(Theme.textPrimary)
 
                 Text("Developer Command-Line Companion")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Theme.textSecondary)
             }
 
             // Explanatory card
@@ -34,17 +34,17 @@ struct MoleInstallModalView: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "bolt.shield.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(Theme.success)
                         .frame(width: 20)
                         .padding(.top, 2)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Native Swift Engine Active")
                             .font(.system(size: 12.5, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.95))
+                            .foregroundStyle(Theme.textPrimary)
                         Text("MacKitty works out-of-the-box with pure Swift. You can clean safe caches and recover gigabytes immediately without installing any tools.")
                             .font(.system(size: 11.5))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -52,25 +52,25 @@ struct MoleInstallModalView: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "cup.and.saucer.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(Theme.warning)
                         .frame(width: 20)
                         .padding(.top, 2)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Install via Homebrew (Optional)")
                             .font(.system(size: 12.5, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.95))
+                            .foregroundStyle(Theme.textPrimary)
                         Text("If you use Homebrew and want CLI integration in your terminal, run:")
                             .font(.system(size: 11.5))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(Theme.textSecondary)
 
                         HStack {
                             Text("brew install mole")
-                                .font(.system(size: 11.5, design: .monospaced))
-                                .foregroundStyle(.white)
+                                .font(Theme.mono(11.5))
+                                .foregroundStyle(Theme.textPrimary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+                                .background(Theme.canvasDeep, in: RoundedRectangle(cornerRadius: 6))
 
                             Button(copiedToClipboard ? "Copied!" : "Copy") {
                                 NSPasteboard.general.clearContents()
@@ -81,7 +81,7 @@ struct MoleInstallModalView: View {
                                 }
                             }
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(copiedToClipboard ? Color.green : Color.blue)
+                            .foregroundStyle(copiedToClipboard ? Theme.success : Theme.accentStrong)
                             .buttonStyle(.plain)
                         }
                         .padding(.top, 2)
@@ -89,11 +89,7 @@ struct MoleInstallModalView: View {
                 }
             }
             .padding(14)
-            .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08))
-            }
+            .glassPanel(radius: 10)
 
             // Action buttons
             VStack(spacing: 10) {
@@ -119,7 +115,7 @@ struct MoleInstallModalView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color.blue, in: RoundedRectangle(cornerRadius: 7))
+                        .background(Theme.accent, in: RoundedRectangle(cornerRadius: 7))
                     }
                     .buttonStyle(.plain)
 
@@ -129,10 +125,11 @@ struct MoleInstallModalView: View {
                     } label: {
                         Text("Use Native Swift Engine")
                             .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.85))
+                            .foregroundStyle(Theme.textPrimary.opacity(0.85))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 7))
+                            .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.lineStrong))
                     }
                     .buttonStyle(.plain)
                 }
@@ -142,17 +139,17 @@ struct MoleInstallModalView: View {
                     dismiss()
                 }
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(Theme.textTertiary)
                 .buttonStyle(.plain)
             }
         }
         .padding(24)
         .frame(width: 460)
-        .background(Color(red: 0.11, green: 0.11, blue: 0.12))
+        .background(Theme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.1))
+                .strokeBorder(Theme.line)
         }
     }
 }

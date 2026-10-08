@@ -17,27 +17,27 @@ struct AboutView: View {
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Theme.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
 
             VStack(spacing: 12) {
                 AppLogoView(size: 72)
-                    .shadow(color: Color.blue.opacity(0.35), radius: 14, y: 4)
+                    .shadow(color: Theme.accent.opacity(0.3), radius: 14, y: 4)
 
                 VStack(spacing: 4) {
                     Text("MacKitty")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .font(Theme.display(24, .bold))
+                        .foregroundStyle(Theme.textPrimary)
 
                     Text("A calmer, cleaner Mac")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(Theme.textSecondary)
 
                     Text("Version 1.0.0 (Build 2026.09)")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .font(Theme.mono(11))
+                        .foregroundStyle(Theme.textTertiary)
                         .padding(.top, 2)
                 }
             }
@@ -45,7 +45,7 @@ struct AboutView: View {
             Text("MacKitty is a fast, transparent macOS cleaner and hardware monitor designed with zero bloat and zero telemetry. Powered by Mole CLI to safely clean caches, developer leftovers, logs, and unused clutter.")
                 .font(.system(size: 12.5))
                 .lineSpacing(3)
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 14)
 
@@ -56,21 +56,17 @@ struct AboutView: View {
                 LinkRow(icon: "terminal.fill", label: "CLI Engine", value: "Mole (Homebrew)", urlString: "https://github.com/tw93/mole")
             }
             .padding(12)
-            .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08))
-            }
+            .glassPanel(radius: 10)
 
             // Update status section
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(updater.statusMessage)
                         .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(updater.isUpdateAvailable ? .yellow : .white.opacity(0.6))
+                        .foregroundStyle(updater.isUpdateAvailable ? Theme.accentStrong : Theme.textSecondary)
                     Text("Checked: \(updater.lastCheckedText)")
                         .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(Theme.textTertiary)
                 }
 
                 Spacer()
@@ -81,7 +77,7 @@ struct AboutView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 5)
-                        .background(Color.blue, in: Capsule())
+                        .background(Theme.accent, in: Capsule())
                         .buttonStyle(.plain)
                 } else {
                     Button(action: {
@@ -94,10 +90,11 @@ struct AboutView: View {
                             Text(updater.isChecking ? "Checking…" : "Check Updates")
                         }
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(Theme.textPrimary.opacity(0.8))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 6))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Theme.lineStrong))
                     }
                     .buttonStyle(.plain)
                     .disabled(updater.isChecking)
@@ -107,19 +104,19 @@ struct AboutView: View {
 
             Text("© 2026 MacKitty. All rights reserved.")
                 .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.25))
+                .foregroundStyle(Theme.textTertiary)
         }
         .padding(28)
         .frame(width: 440)
-        .background(Color(red: 0.11, green: 0.12, blue: 0.15))
-        .preferredColorScheme(.dark)
+        .background(Theme.canvas)
+        .preferredColorScheme(.light)
         .sheet(isPresented: $updater.showUpdateModal) {
             UpdateModalView(updater: updater)
         }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.1))
+                .strokeBorder(Theme.line)
         }
     }
 }
@@ -139,22 +136,22 @@ private struct LinkRow: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 11.5))
-                    .foregroundStyle(Color.blue)
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 16)
 
                 Text(label)
                     .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(Theme.textSecondary)
 
                 Spacer()
 
                 Text(value)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(Theme.textPrimary)
 
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 9))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(Theme.textTertiary)
             }
         }
         .buttonStyle(.plain)

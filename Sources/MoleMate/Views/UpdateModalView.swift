@@ -11,27 +11,27 @@ struct UpdateModalView: View {
             HStack(spacing: 14) {
                 AppLogoView(size: 48)
                     .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.3), radius: 8, y: 4)
+                    .shadow(color: Theme.ink.opacity(0.12), radius: 8, y: 4)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         Text("MacKitty Update")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(Theme.display(16, .bold))
+                            .foregroundStyle(Theme.textPrimary)
 
                         Text("v\(updater.latestVersion)")
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .font(Theme.mono(11, .semibold))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
-                            .background(Color.green.opacity(0.18))
-                            .foregroundStyle(Color.green)
+                            .background(Theme.success.opacity(0.14))
+                            .foregroundStyle(Theme.success)
                             .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(Color.green.opacity(0.35), lineWidth: 0.8))
+                            .overlay(Capsule().strokeBorder(Theme.success.opacity(0.35), lineWidth: 0.8))
                     }
 
                     Text("Current version: v\(updater.currentVersion)")
                         .font(.system(size: 12))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
             }
@@ -40,19 +40,19 @@ struct UpdateModalView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("What's New")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(Theme.textSecondary)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
                         if !updater.releaseNotes.isEmpty {
                             Text(updater.releaseNotes)
                                 .font(.system(size: 12))
-                                .foregroundStyle(.white.opacity(0.75))
+                                .foregroundStyle(Theme.textPrimary.opacity(0.8))
                                 .lineSpacing(3)
                         } else {
                             Text("• Universal Apple Silicon and Intel optimizations\n• Performance and cache scanning improvements\n• Hardened runtime and Apple security updates")
                                 .font(.system(size: 12))
-                                .foregroundStyle(.white.opacity(0.75))
+                                .foregroundStyle(Theme.textPrimary.opacity(0.8))
                                 .lineSpacing(3)
                         }
                     }
@@ -60,11 +60,11 @@ struct UpdateModalView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(height: 90)
-                .background(Color.black.opacity(0.25))
+                .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(Theme.line, lineWidth: 1)
                 )
             }
 
@@ -73,38 +73,38 @@ struct UpdateModalView: View {
                 VStack(spacing: 10) {
                     ProgressView(value: updater.installProgress, total: 1.0)
                         .progressViewStyle(.linear)
-                        .tint(Color.blue)
+                        .tint(Theme.accent)
 
                     HStack {
                         Text(updater.installStatusText)
                             .font(.system(size: 11.5))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(Theme.textSecondary)
                         Spacer()
                     }
                 }
                 .padding(12)
-                .background(Color.blue.opacity(0.08))
+                .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
+                        .strokeBorder(Theme.line, lineWidth: 1)
                 )
             } else if let errorMsg = updater.installError {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                         Text("Installation Notice")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
                     }
                     Text(errorMsg)
                         .font(.system(size: 11.5))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.orange.opacity(0.1))
+                .background(Theme.warning.opacity(0.14))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
 
@@ -114,7 +114,7 @@ struct UpdateModalView: View {
                     Button(action: { updater.openDownloadPage() }) {
                         Text("Download .dmg Manually")
                             .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(Theme.textSecondary)
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 8)
@@ -127,11 +127,12 @@ struct UpdateModalView: View {
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(Theme.textPrimary.opacity(0.8))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(Color.white.opacity(0.06))
+                .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Theme.lineStrong))
                 .disabled(updater.isInstalling)
 
                 Button(action: {
@@ -151,7 +152,7 @@ struct UpdateModalView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 7)
-                    .background(Color.blue)
+                    .background(Theme.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -160,7 +161,7 @@ struct UpdateModalView: View {
         }
         .padding(24)
         .frame(width: 440)
-        .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-        .preferredColorScheme(.dark)
+        .background(Theme.canvas)
+        .preferredColorScheme(.light)
     }
 }

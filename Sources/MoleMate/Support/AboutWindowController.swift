@@ -25,7 +25,8 @@ final class AboutWindowController {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
-        window.backgroundColor = NSColor(calibratedRed: 0.12, green: 0.12, blue: 0.13, alpha: 1.0)
+        window.backgroundColor = NSColor(calibratedRed: 0.961, green: 0.961, blue: 0.969, alpha: 1.0)
+        window.appearance = NSAppearance(named: .aqua)
         window.contentView = hostingView
         window.isReleasedWhenClosed = false
         self.window = window

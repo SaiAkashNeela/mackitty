@@ -39,6 +39,17 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
 
+        // An empty unified toolbar makes the titlebar 52pt tall, so the native
+        // traffic lights sit vertically centred in our 52pt top bar instead of
+        // hugging the top edge with dead space around them.
+        if window.toolbar == nil {
+            let toolbar = NSToolbar(identifier: "MacKittyChrome")
+            toolbar.showsBaselineSeparator = false
+            window.toolbar = toolbar
+            window.toolbarStyle = .unified
+            window.titlebarSeparatorStyle = .none
+        }
+
         // Ensure Apple authentic native traffic lights are visible & interactive
         window.standardWindowButton(.closeButton)?.isHidden = false
         window.standardWindowButton(.miniaturizeButton)?.isHidden = false
