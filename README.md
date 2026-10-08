@@ -81,7 +81,7 @@ Clone the repository and launch the app using the bundled build script:
 - `Sources/MoleMate/Views/` — SwiftUI screens (`SimpleDashboardView.swift` is the main window, `TrayMiniDashboardView.swift` the menu bar popover)
 - `Sources/MoleMate/Support/Theme.swift` — design tokens (colours, type, card and button styles)
 - `Sources/MoleMate/Services/` — native cleaner, Mole CLI bridge, system monitor, updater
-- `website/` — marketing site with an interactive demo of the app
+- `website/` — marketing site with an interactive demo of the app (after editing `styles.css` or `app.js`, run `./script/stamp_website_assets.sh` so browsers don't reuse a cached copy)
 - `AppStore/`, `script/build_appstore.sh`, `docs/app-store-submission.md` — sandboxed Mac App Store build (on hold)
 
 ---
