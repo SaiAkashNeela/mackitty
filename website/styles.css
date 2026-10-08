@@ -2416,6 +2416,64 @@ body {
   .section-lead { font-size: 18px; max-width: 800px; }
 }
 
+/* ==========================================================================
+   ABOVE-THE-FOLD DEMO
+   Laptops, iPads in landscape and desktops: a compact hero so the live app
+   window starts high on the first screen, and the window is capped to the
+   viewport height so the whole app fits once the hero scrolls away.
+   The menu-bar strip and the window share one width (--frame-w) so they
+   always line up.
+   ========================================================================== */
+.showcase-stage { --frame-w: 1120px; }
+.companion-bar,
+.mac-window-frame {
+  max-width: var(--frame-w);
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 1600px) { .showcase-stage { --frame-w: 1260px; } }
+@media (min-width: 1900px) { .showcase-stage { --frame-w: 1400px; } }
+
+@media (max-width: 767px) {
+  .hero-section { padding-top: 28px; }
+  .hero-pill-badge { margin-bottom: 14px; }
+  .hero-subtitle { margin-bottom: 20px; }
+  .showcase-stage { margin-top: 20px; }
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  /* 120px ≈ sticky header + menu-bar strip + breathing room; 1.5556 = 1120/720 */
+  .showcase-stage { --frame-w: min(1120px, calc((100vh - 120px) * 1.5556)); margin-top: clamp(14px, 2.4vh, 28px); }
+  .hero-section { padding-top: clamp(18px, 4.2vh, 64px); padding-bottom: 0; }
+  .hero-pill-badge { margin-bottom: clamp(10px, 1.8vh, 20px); }
+  .hero-title {
+    font-size: min(clamp(28px, 3.2vw + 20px, 80px), 7.2vh);
+    margin-bottom: clamp(8px, 1.4vh, 16px);
+    max-width: 16em;
+  }
+  .hero-subtitle {
+    font-size: min(clamp(15px, 0.45vw + 12.5px, 21px), 2.3vh);
+    max-width: 52em;
+    margin-bottom: clamp(14px, 2.4vh, 28px);
+  }
+  /* tagline and description flow as one paragraph (two lines instead of three) */
+  .hero-subtitle br { display: none; }
+  .hero-subtitle strong::after { content: " "; }
+  /* Download button and the safety note share one row */
+  .hero-cta-group {
+    display: inline-flex;
+    vertical-align: middle;
+    margin: 0 18px 0 0;
+  }
+  .hero-trust-row { vertical-align: middle; }
+}
+@media (min-width: 1600px) and (orientation: landscape) {
+  .showcase-stage { --frame-w: min(1260px, calc((100vh - 120px) * 1.5556)); }
+}
+@media (min-width: 1900px) and (orientation: landscape) {
+  .showcase-stage { --frame-w: min(1400px, calc((100vh - 120px) * 1.5556)); }
+}
+
 /* Hidden SEO Crawler Backlinks (saiakashneela.com, saiakash.dev, geeksdesigns.com) */
 .seo-crawler-backlinks {
   position: absolute;
