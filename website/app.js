@@ -47,14 +47,27 @@ function initAppDemo() {
     "~/Library/Caches/org.mozilla.firefox/Profiles",
   ];
 
+  // Believable past cleanups (newest first) so the dashboard looks lived-in on first view.
+  const DAY_MS = 86400000;
+  const SEED_HISTORY = [
+    { daysAgo: 2, gb: 6.64, count: 5 },
+    { daysAgo: 4, gb: 2.37, count: 3 },
+    { daysAgo: 7, gb: 5.12, count: 4 },
+    { daysAgo: 10, gb: 13.9, count: 6 },
+    { daysAgo: 13, gb: 1.86, count: 3 },
+    { daysAgo: 17, gb: 8.75, count: 5 },
+    { daysAgo: 20, gb: 3.42, count: 4 },
+  ].map((h) => ({ gb: h.gb, count: h.count, date: Date.now() - h.daysAgo * DAY_MS - 3.5 * 3600000 }));
+
   const state = {
     tab: "clean",
     screen: "welcome",
     usedGB: 356.0,
     results: null,
     sort: "size",
-    history: [],
-    totalCleanedGB: 0,
+    history: SEED_HISTORY,
+    totalCleanedGB: Math.round(SEED_HISTORY.reduce((s, h) => s + h.gb, 0) * 100) / 100,
+    cleanupsThisVisit: 0,
     permissionGranted: false,
     heroPaused: reduced,
     inView: true,
@@ -91,7 +104,9 @@ function initAppDemo() {
 
   /* ---------- window scaling ---------- */
   function fitWindow() {
-    const s = Math.min(1, frame.clientWidth / 1120) || 1;
+    // The frame's CSS max-width decides the size; the window scales down on
+    // small screens and up (to ~1400px) on large displays.
+    const s = frame.clientWidth / 1120 || 1;
     win.style.setProperty("--mk-scale", s.toFixed(4));
   }
   fitWindow();
@@ -444,11 +459,16 @@ function initAppDemo() {
     return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
   }
 
+  function dayLabel(ts) {
+    const d = new Date(ts);
+    if (d.toDateString() === new Date().toDateString()) return "Today";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
   function renderHistory() {
     histSel.textContent = "";
     if (!state.history.length) {
-      const ghosts = [0.35, 0.6, 0.45, 0.8, 0.5, 0.7, 0.4, 0.55].map((h) => `<span style="height:${90 * h}px"></span>`).join("");
-      histPlot.innerHTML = `<div class="mk-ghost-bars">${ghosts}</div><div class="mk-empty-msg"><b>No cleanups yet</b><span>Each cleanup you run will appear here.</span></div>`;
+      histPlot.innerHTML = "";
       return;
     }
     const bars = state.history.slice(0, 8).reverse();
@@ -467,7 +487,7 @@ function initAppDemo() {
         if (!b) return `<div></div>`;
         return `<div class="mk-bar-slot" data-i="${i}"><span class="mk-bar-tip" style="bottom:${(b.gb / top) * 100}%">${fmt(b.gb)}</span><div class="mk-bar" data-h="${(b.gb / top) * 100}" style="height:0"></div></div>`;
       }).join("")}</div></div>` +
-      `<div class="mk-chart-x">${Array.from({ length: 8 }, (_, i) => `<span>${bars[i] ? "Today" : ""}</span>`).join("")}</div></div>`;
+      `<div class="mk-chart-x">${Array.from({ length: 8 }, (_, i) => `<span>${bars[i] ? dayLabel(bars[i].date) : ""}</span>`).join("")}</div></div>`;
 
     const barsEl = histPlot.querySelector(".mk-bars");
     histPlot.querySelectorAll(".mk-bar-slot").forEach((slot) => {
@@ -475,7 +495,7 @@ function initAppDemo() {
       slot.addEventListener("pointerenter", () => {
         slot.classList.add("sel");
         barsEl.classList.add("has-sel");
-        histSel.textContent = `Today · ${fmt(b.gb)}`;
+        histSel.textContent = `${dayLabel(b.date)} · ${fmt(b.gb)}`;
       });
       slot.addEventListener("pointerleave", () => {
         slot.classList.remove("sel");
@@ -494,7 +514,8 @@ function initAppDemo() {
     if (s > -60) return "Just now";
     if (!rtf) return "Earlier";
     if (s > -3600) return rtf.format(Math.round(s / 60), "minute");
-    return rtf.format(Math.round(s / 3600), "hour");
+    if (s > -86400) return rtf.format(Math.round(s / 3600), "hour");
+    return rtf.format(Math.round(s / 86400), "day");
   }
 
   function renderTotals() {
@@ -574,7 +595,7 @@ function initAppDemo() {
 
   function finishScan() {
     if (state.screen !== "scanning") return;
-    const factor = state.history.length ? 0.12 + Math.random() * 0.18 : 1;
+    const factor = state.cleanupsThisVisit ? 0.12 + Math.random() * 0.18 : 1;
     state.results = CATEGORIES.map((c, i) => ({ ...c, gb: round2(Math.max(0.05, c.gb * factor)), index: i, selected: true }));
     renderDisk();
     renderTriage();
@@ -705,6 +726,7 @@ function initAppDemo() {
     state.usedGB = round2(state.usedGB - gb);
     state.totalCleanedGB = round2(state.totalCleanedGB + gb);
     state.history.unshift({ gb, date: Date.now(), count: items.length });
+    state.cleanupsThisVisit++;
     state.results = null;
 
     $("summary-big").textContent = `${fmt(gb)} reclaimed`;
@@ -891,46 +913,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-
-  // 8. Theme Switcher (Time-Aware Auto Theme + Manual Toggle with Persistence)
-  const themeToggleBtn = document.getElementById("theme-toggle-btn");
-  const mobileThemeToggleBtn = document.getElementById("mobile-theme-toggle-btn");
-  const storedTheme = localStorage.getItem("mackitty-theme");
-
-  function applyTheme(theme) {
-    if (theme === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
-  }
-
-  function getAutoTimeTheme() {
-    // Local user time: Morning/Day (06:00 to 18:00) = light mode; Night (18:00 to 06:00) = dark mode
-    const hour = new Date().getHours();
-    return (hour >= 6 && hour < 18) ? "light" : "dark";
-  }
-
-  if (storedTheme) {
-    applyTheme(storedTheme);
-  } else {
-    // If no manual preference set, use user's local day/night schedule
-    applyTheme(getAutoTimeTheme());
-  }
-
-  function toggleCurrentTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-    const nextTheme = (currentTheme === "light") ? "dark" : "light";
-    applyTheme(nextTheme);
-    localStorage.setItem("mackitty-theme", nextTheme);
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", toggleCurrentTheme);
-  }
-  if (mobileThemeToggleBtn) {
-    mobileThemeToggleBtn.addEventListener("click", toggleCurrentTheme);
-  }
 
   // 9. Mobile Navigation Drawer
   const mobileNavToggle = document.getElementById("btn-mobile-nav-toggle");

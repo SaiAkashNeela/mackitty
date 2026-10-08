@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#fbfbfd">
   <title>Terms of Service — MacKitty</title>
   <meta name="description" content="Terms of Service for MacKitty macOS software and website. Simple, straightforward terms.">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
@@ -11,8 +13,8 @@
   <style>
     .legal-container {
       max-width: 780px;
-      margin: 120px auto 80px;
-      padding: 0 24px;
+      margin: 56px auto 72px;
+      padding: 0 16px;
       position: relative;
       z-index: 10;
     }
@@ -20,8 +22,22 @@
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: 16px;
-      padding: 40px;
+      padding: 24px 20px;
       box-shadow: var(--shadow-card);
+    }
+    @media (min-width: 600px) {
+      .legal-container { margin-top: 80px; padding: 0 24px; }
+      .legal-card { padding: 40px; }
+    }
+    .legal-card a { color: var(--mac-blue); }
+    .legal-card code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text-primary);
+      overflow-wrap: anywhere;
     }
     .legal-card h1 {
       font-size: clamp(26px, 4vw, 36px);
@@ -71,10 +87,6 @@
       </a>
 
       <div class="header-actions">
-        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" title="Toggle Light/Dark Theme">
-          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </button>
         <a href="index.html" class="btn-header-download">← Back to App</a>
       </div>
     </div>
@@ -112,18 +124,19 @@
 
       <section class="legal-section">
         <h2>6. Contact</h2>
-        <p>Questions regarding these terms may be directed to <a href="https://saiakashneela.com" style="color: var(--mac-blue);">saiakashneela.com</a>.</p>
+        <p>Questions regarding these terms may be directed to <a href="https://saiakashneela.com">saiakashneela.com</a>.</p>
       </section>
     </article>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
-      <div>© 2026 MacKitty. Plain language terms.</div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="privacy.html">Privacy Policy</a>
-      </div>
+      <p class="footer-copy">© 2026 Sai Akash Neela</p>
+      <ul class="footer-links">
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms</a></li>
+        <li><a href="https://github.com/SaiAkashNeela/mackitty" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
     </div>
   </footer>
 
