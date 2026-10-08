@@ -42,18 +42,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.applicationIconImage = icon
         }
         setupAppMenu()
+        retireOtherInstances()
         checkMoveToApplicationsIfNeeded()
     }
 
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        NSApp.activate(ignoringOtherApps: true)
-        for window in sender.windows where window.title == "MacKitty" || window.canBecomeMain {
-            if window.isMiniaturized {
-                window.deminiaturize(nil)
+    /// Closing the window keeps MacKitty running in the menu bar.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
+    /// After an update the new copy launches while the old one may still be
+    /// shutting down. Only one MacKitty should ever run: ask older copies to quit,
+    /// and force them if they don't within a couple of seconds.
+    private func retireOtherInstances() {
+        guard let bundleID = Bundle.main.bundleIdentifier else { return }
+        let current = NSRunningApplication.current
+        for app in NSRunningApplication.runningApplications(withBundleIdentifier: bundleID) where app != current {
+            app.terminate()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                if !app.isTerminated { app.forceTerminate() }
             }
-            window.makeKeyAndOrderFront(nil)
-            return true
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        MainWindow.show()
         return true
     }
 

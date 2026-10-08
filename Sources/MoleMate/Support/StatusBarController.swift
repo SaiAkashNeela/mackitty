@@ -146,11 +146,7 @@ final class StatusBarController: NSObject {
     // MARK: - Actions
     @objc private func openApp() {
         closePopover()
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.title == "MacKitty" || $0.canBecomeMain }) {
-            window.makeKeyAndOrderFront(nil)
-            window.deminiaturize(nil)
-        }
+        MainWindow.show()
     }
 
     @objc private func openUpdate() {

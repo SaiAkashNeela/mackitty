@@ -111,52 +111,36 @@ struct UpdateModalView: View {
             // Buttons
             HStack(spacing: 10) {
                 if !updater.isInstalling {
-                    Button(action: { updater.openDownloadPage() }) {
-                        Text("Download .dmg Manually")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 8)
+                    Button("Download manually") { updater.openDownloadPage() }
+                        .buttonStyle(.plain)
+                        .font(Theme.body(12))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                Button("Cancel") {
-                    dismiss()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.textPrimary.opacity(0.8))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Theme.lineStrong))
-                .disabled(updater.isInstalling)
+                Button("Cancel") { dismiss() }
+                    .buttonStyle(GhostButtonStyle())
+                    .lineLimit(1)
+                    .fixedSize()
+                    .disabled(updater.isInstalling)
+                    .keyboardShortcut(.cancelAction)
 
-                Button(action: {
-                    updater.startInPlaceUpdate()
-                }) {
+                Button(action: { updater.startInPlaceUpdate() }) {
                     HStack(spacing: 6) {
                         if updater.isInstalling {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 11, weight: .bold))
+                            ProgressView().controlSize(.small)
                         }
                         Text(updater.isInstalling ? "Updating…" : "Update & Restart")
-                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 7)
-                    .background(Theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .fixedSize()
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PrimaryButtonStyle(isEnabled: !updater.isInstalling))
                 .disabled(updater.isInstalling)
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)

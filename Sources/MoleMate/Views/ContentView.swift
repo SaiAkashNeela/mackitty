@@ -35,6 +35,7 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
 
     private func configure(_ window: NSWindow?) {
         guard let window else { return }
+        MainWindow.adopt(window)
         window.styleMask.insert([.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView])
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true

@@ -319,14 +319,23 @@ final class UpdateCheckerService: NSObject, ObservableObject, URLSessionDownload
         // Atomic swap (rename on the same volume); the old bundle is removed only on success.
         _ = try FileManager.default.replaceItemAt(target, withItemAt: extractedAppURL)
 
-        // Relaunch after this process exits. The path is passed as an argument,
+        // Relaunch only once this process has really exited (up to 10 s), so two
+        // copies never run side by side. Paths and PID are passed as arguments,
         // never interpolated into the shell script.
+        let pid = String(ProcessInfo.processInfo.processIdentifier)
         let relaunch = Process()
         relaunch.executableURL = URL(fileURLWithPath: "/bin/sh")
-        relaunch.arguments = ["-c", "sleep 1; /usr/bin/open -n \"$1\"", "mackitty-relaunch", target.path]
+        relaunch.arguments = [
+            "-c",
+            "i=0; while kill -0 \"$2\" 2>/dev/null && [ $i -lt 100 ]; do sleep 0.1; i=$((i+1)); done; /usr/bin/open \"$1\"",
+            "mackitty-relaunch", target.path, pid
+        ]
         try relaunch.run()
 
         NSApp.terminate(nil)
+        // An open sheet or popover can stall a normal quit; the update is already
+        // installed, so make sure this old copy goes away.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { exit(0) }
     }
 
     // MARK: - Trust checks
