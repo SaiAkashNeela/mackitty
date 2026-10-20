@@ -36,6 +36,8 @@ final class DashboardModel: ObservableObject {
     let mole = MoleService()
     let nativeCleaner = NativeCleanerService()
     let monitor = SystemMonitorService()
+    /// The to-do list, shared by the Tasks tab and the notch tray.
+    let tasks: TaskStore
     var updater = UpdateCheckerService()
     private var scanTask: Task<Void, Never>?
     private var cleanTask: Task<Void, Never>?
@@ -50,6 +52,7 @@ final class DashboardModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init() {
+        tasks = TaskStore()
         if let data = UserDefaults.standard.data(forKey: "cleanup-history"),
            let saved = try? JSONDecoder().decode([CleanupHistoryEntry].self, from: data) {
             history = saved

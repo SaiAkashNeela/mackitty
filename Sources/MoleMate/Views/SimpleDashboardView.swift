@@ -85,8 +85,8 @@ private struct TopBar: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .keyboardShortcut(KeyEquivalent(tab == .clean ? "1" : "2"), modifiers: .command)
-                    .help("\(tab.rawValue) (⌘\(tab == .clean ? 1 : 2))")
+                    .keyboardShortcut(KeyEquivalent(tab.shortcutDigit), modifiers: .command)
+                    .help("\(tab.rawValue) (⌘\(String(tab.shortcutDigit)))")
                 }
             }
             .padding(2)
@@ -140,9 +140,12 @@ private struct ScreenBody: View {
 
     var body: some View {
         Group {
-            if model.topTab == .apps {
+            switch model.topTab {
+            case .apps:
                 AppsScreen()
-            } else {
+            case .tasks:
+                TasksScreen(store: model.tasks)
+            case .clean:
                 switch model.screen {
                 case .welcome: OverviewScreen()
                 case .scanning: ScanningScreen()
@@ -159,7 +162,7 @@ private struct ScreenBody: View {
 }
 
 /// Page header: title, subtitle and optional trailing controls.
-private struct PageHeader<Trailing: View>: View {
+struct PageHeader<Trailing: View>: View {
     let title: String
     let subtitle: String
     @ViewBuilder var trailing: Trailing
@@ -180,7 +183,8 @@ private struct PageHeader<Trailing: View>: View {
     }
 }
 
-private extension View {
+extension View {
+    /// The 940pt-wide page used by Review cleanup, Tasks and Apps.
     func pageFrame() -> some View {
         self
             .frame(maxWidth: 940, alignment: .topLeading)

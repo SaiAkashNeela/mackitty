@@ -10,7 +10,13 @@ enum DashboardScreen {
 
 enum TopTab: String, CaseIterable {
     case clean = "Clean"
+    case tasks = "Tasks"
     case apps = "Apps"
+
+    /// ⌘1, ⌘2, ⌘3 follow the order of the tabs.
+    var shortcutDigit: Character {
+        Character(String((Self.allCases.firstIndex(of: self) ?? 0) + 1))
+    }
 }
 
 enum AppSection: String, CaseIterable, Identifiable {

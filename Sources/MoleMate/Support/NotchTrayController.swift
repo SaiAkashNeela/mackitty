@@ -58,7 +58,6 @@ final class NotchTrayController {
     private static let closeDelay: Duration = .milliseconds(350)
 
     private let model: DashboardModel
-    private let store = TaskStore()
     private let state = NotchTrayState()
     private var panel: NotchPanel?
     private var zones: [HotZone] = []
@@ -351,7 +350,7 @@ final class NotchTrayController {
 
         let container = TrayTrackingView(frame: NSRect(origin: .zero, size: size))
         container.onPointerEvent = { [weak self] in self?.pointerChanged(isClick: false) }
-        let hosting = FirstMouseHostingView(rootView: NotchTrayView(state: state, store: store, model: model, onClose: { [weak self] in
+        let hosting = FirstMouseHostingView(rootView: NotchTrayView(state: state, store: model.tasks, model: model, onClose: { [weak self] in
             self?.close()
         }))
         hosting.sizingOptions = []
