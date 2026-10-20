@@ -11,6 +11,7 @@ struct TrayMiniDashboardView: View {
             header
             StorageSummary(model: model)
             TrayVitals(monitor: model.monitor)
+            TrayTasksRow(store: model.tasks, open: openTasks)
             primaryAction
             if let last = model.history.first {
                 HStack(spacing: 6) {
@@ -121,6 +122,11 @@ struct TrayMiniDashboardView: View {
         MainWindow.show()
     }
 
+    private func openTasks() {
+        openApp()
+        model.selectTopTab(.tasks)
+    }
+
     private func scanNow() {
         openApp()
         model.selectTopTab(.clean)
@@ -192,6 +198,58 @@ private struct StorageSummary: View {
         }
         .padding(12)
         .glassPanel(radius: 12)
+    }
+}
+
+// MARK: - Tasks
+
+/// How many tasks are left and the next one; opens the Tasks tab.
+private struct TrayTasksRow: View {
+    @ObservedObject var store: TaskStore
+    let open: () -> Void
+    @State private var hovered = false
+
+    private var nextTask: NotchTask? { store.tasks.first { !$0.isDone } }
+
+    private var summary: String {
+        if store.tasks.isEmpty { return "None yet" }
+        if store.remainingCount == 0 { return "All done" }
+        return "\(store.remainingCount) to do"
+    }
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 10) {
+                RowIcon(systemName: "checklist")
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Tasks")
+                        .font(Theme.body(12))
+                        .foregroundStyle(Theme.textSecondary)
+                    if let nextTask {
+                        Text(nextTask.title)
+                            .font(Theme.body(11))
+                            .foregroundStyle(Theme.textTertiary)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 8)
+                Text(summary)
+                    .font(Theme.numeric(12, .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .contentTransition(.numericText(value: Double(store.remainingCount)))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(hovered ? Theme.textSecondary : Theme.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .glassPanel(radius: 12)
+        .onHover { hovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovered)
+        .help("Open Tasks in MacKitty")
     }
 }
 
