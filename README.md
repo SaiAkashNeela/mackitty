@@ -41,6 +41,7 @@ MacKitty is architected around **strict non-destructive safety principles**:
 - **One-Screen Dashboard:** Storage donut (used / reclaimable / free), live CPU and memory charts, battery and network status, a per-cleanup bar chart and lifetime totals — no scrolling.
 - **Guided Scan & Clean:** Progress with live file counts and paths, then a sortable review table and a confirmation before anything is removed.
 - **Menu Bar Popover:** Click the cat icon for storage, live vitals and a one-click Scan.
+- **Tasks in the Notch:** Rest the pointer on the camera notch and a task tray springs out of it. Add tasks, tick them off, clear the done ones (with undo). On displays without a notch, the top centre of the screen does the same. Turn it off in Settings or the menu bar menu.
 - **Safe Cleanup Areas:**
   - Xcode Derived Data
   - Safari, Chrome and Firefox caches

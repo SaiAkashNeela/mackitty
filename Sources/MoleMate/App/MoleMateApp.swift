@@ -33,6 +33,7 @@ struct MacKittyApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
+    private var notchTray: NotchTrayController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -42,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.applicationIconImage = icon
         }
         setupAppMenu()
+        notchTray = NotchTrayController()
         retireOtherInstances()
         checkMoveToApplicationsIfNeeded()
     }

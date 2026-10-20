@@ -68,14 +68,19 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
 }
 
 struct SettingsView: View {
+    @AppStorage(NotchTasksSetting.key) private var notchTasksEnabled = true
+
     var body: some View {
         Form {
             Section("Cleanup") {
                 Toggle("Ask before every cleanup", isOn: .constant(true))
                 Toggle("Show Mole output after an operation", isOn: .constant(true))
             }
+            Section("Tasks") {
+                Toggle("Open Tasks when the pointer rests on the notch", isOn: $notchTasksEnabled)
+            }
         }
         .padding(24)
-        .frame(width: 420, height: 220)
+        .frame(width: 420, height: 260)
     }
 }

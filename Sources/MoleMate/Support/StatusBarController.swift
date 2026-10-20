@@ -117,6 +117,11 @@ final class StatusBarController: NSObject {
         scanItem.target = self
         menu.addItem(scanItem)
 
+        let tasksItem = NSMenuItem(title: "Tasks in the Notch", action: #selector(toggleNotchTasks), keyEquivalent: "")
+        tasksItem.target = self
+        tasksItem.state = NotchTasksSetting.isEnabled ? .on : .off
+        menu.addItem(tasksItem)
+
         menu.addItem(NSMenuItem.separator())
 
         if let model = model, model.updater.isUpdateAvailable {
@@ -165,6 +170,10 @@ final class StatusBarController: NSObject {
         model?.selectTopTab(.clean)
         model?.resetForFreshScan()
         model?.requestScan()
+    }
+
+    @objc private func toggleNotchTasks() {
+        NotchTasksSetting.isEnabled.toggle()
     }
 
     @objc private func quitApp() {
