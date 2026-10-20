@@ -117,10 +117,10 @@ final class StatusBarController: NSObject {
         scanItem.target = self
         menu.addItem(scanItem)
 
-        let tasksItem = NSMenuItem(title: "Tasks in the Notch", action: #selector(toggleNotchTasks), keyEquivalent: "")
-        tasksItem.target = self
-        tasksItem.state = NotchTasksSetting.isEnabled ? .on : .off
-        menu.addItem(tasksItem)
+        let notchItem = NSMenuItem(title: "Notch Tray", action: #selector(toggleNotchTray), keyEquivalent: "")
+        notchItem.target = self
+        notchItem.state = NotchTraySetting.isEnabled ? .on : .off
+        menu.addItem(notchItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -172,8 +172,8 @@ final class StatusBarController: NSObject {
         model?.requestScan()
     }
 
-    @objc private func toggleNotchTasks() {
-        NotchTasksSetting.isEnabled.toggle()
+    @objc private func toggleNotchTray() {
+        NotchTraySetting.isEnabled.toggle()
     }
 
     @objc private func quitApp() {

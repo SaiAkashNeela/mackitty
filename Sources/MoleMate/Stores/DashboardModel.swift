@@ -156,6 +156,11 @@ final class DashboardModel: ObservableObject {
         }
     }
 
+    /// True when a scan can start straight away, with no access prompt to show first.
+    var canScanWithoutPrompt: Bool {
+        isAppStoreBuild ? SandboxAccess.hasAccess : UserDefaults.standard.bool(forKey: "didAcknowledgeScanPermissions")
+    }
+
     func startScanAfterPermissionPrompt() {
         UserDefaults.standard.set(true, forKey: "didAcknowledgeScanPermissions")
         scan()

@@ -68,7 +68,7 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
 }
 
 struct SettingsView: View {
-    @AppStorage(NotchTasksSetting.key) private var notchTasksEnabled = true
+    @AppStorage(NotchTraySetting.key) private var notchTrayEnabled = true
 
     var body: some View {
         Form {
@@ -76,8 +76,8 @@ struct SettingsView: View {
                 Toggle("Ask before every cleanup", isOn: .constant(true))
                 Toggle("Show Mole output after an operation", isOn: .constant(true))
             }
-            Section("Tasks") {
-                Toggle("Open Tasks when the pointer rests on the notch", isOn: $notchTasksEnabled)
+            Section("Notch") {
+                Toggle("Open the cleaner and tasks when the pointer rests on the notch", isOn: $notchTrayEnabled)
             }
         }
         .padding(24)

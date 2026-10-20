@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// The on/off switch for the notch task tray (Settings and the menu bar menu).
-enum NotchTasksSetting {
-    static let key = "notchTasksEnabled"
+/// The on/off switch for the notch tray (Settings and the menu bar menu).
+enum NotchTraySetting {
+    static let key = "notchTrayEnabled"
 
     static var isEnabled: Bool {
         get { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
@@ -28,7 +28,8 @@ final class NotchTrayState: ObservableObject {
     var islandSize: CGSize = .zero
 }
 
-/// Opens a task tray out of the camera notch when the pointer rests on it.
+/// Opens a tray out of the camera notch when the pointer rests on it, with
+/// MacKitty's cleaner and a task list.
 ///
 /// Hover is detected from mouse events and `NSEvent.mouseLocation`, not from a
 /// window parked over the notch, so nothing sits on top of the menu bar while the
@@ -56,6 +57,7 @@ final class NotchTrayController {
     /// Grace period after the pointer leaves before the tray folds away.
     private static let closeDelay: Duration = .milliseconds(350)
 
+    private let model: DashboardModel
     private let store = TaskStore()
     private let state = NotchTrayState()
     private var panel: NotchPanel?
@@ -71,7 +73,8 @@ final class NotchTrayController {
     private var activeAppTimer: Timer?
     private var observers: [NSObjectProtocol] = []
 
-    init() {
+    init(model: DashboardModel) {
+        self.model = model
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -104,7 +107,7 @@ final class NotchTrayController {
     // MARK: Enabling
 
     private func applyEnabledSetting() {
-        if NotchTasksSetting.isEnabled {
+        if NotchTraySetting.isEnabled {
             installEventMonitors()
             if NSApp.isActive { startActiveAppTimer() }
         } else {
@@ -153,7 +156,7 @@ final class NotchTrayController {
     /// The global monitor only sees other apps' events, so while MacKitty itself is
     /// frontmost the pointer is sampled instead, ten times a second.
     private func startActiveAppTimer() {
-        guard NotchTasksSetting.isEnabled, activeAppTimer == nil else { return }
+        guard NotchTraySetting.isEnabled, activeAppTimer == nil else { return }
         let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
@@ -200,7 +203,7 @@ final class NotchTrayController {
     // MARK: Pointer
 
     private func pointerChanged(isClick: Bool) {
-        guard NotchTasksSetting.isEnabled else { return }
+        guard NotchTraySetting.isEnabled else { return }
         let point = NSEvent.mouseLocation
 
         if isPresented {
@@ -348,7 +351,7 @@ final class NotchTrayController {
 
         let container = TrayTrackingView(frame: NSRect(origin: .zero, size: size))
         container.onPointerEvent = { [weak self] in self?.pointerChanged(isClick: false) }
-        let hosting = FirstMouseHostingView(rootView: NotchTrayView(state: state, store: store, onClose: { [weak self] in
+        let hosting = FirstMouseHostingView(rootView: NotchTrayView(state: state, store: store, model: model, onClose: { [weak self] in
             self?.close()
         }))
         hosting.sizingOptions = []

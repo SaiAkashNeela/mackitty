@@ -43,7 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.applicationIconImage = icon
         }
         setupAppMenu()
-        notchTray = NotchTrayController()
         retireOtherInstances()
         checkMoveToApplicationsIfNeeded()
     }
@@ -153,5 +152,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func setupStatusBar(with model: DashboardModel) {
         guard statusBarController == nil else { return }
         statusBarController = StatusBarController(model: model)
+        notchTray = NotchTrayController(model: model)
     }
 }
