@@ -81,8 +81,23 @@ Clone the repository and launch the app using the bundled build script:
 - `Sources/MoleMate/Views/` — SwiftUI screens (`SimpleDashboardView.swift` is the main window, `TrayMiniDashboardView.swift` the menu bar popover)
 - `Sources/MoleMate/Support/Theme.swift` — design tokens (colours, type, card and button styles)
 - `Sources/MoleMate/Services/` — native cleaner, Mole CLI bridge, system monitor, updater
-- `website/` — marketing site with an interactive demo of the app (after editing `styles.css` or `app.js`, run `./script/stamp_website_assets.sh` so browsers don't reuse a cached copy)
+- `website/` — marketing site with an interactive demo of the app (after editing `website/styles.css` or `website/app.js`, run `./script/stamp_website_assets.sh` so browsers don't reuse a cached copy)
 - `AppStore/`, `script/build_appstore.sh`, `docs/app-store-submission.md` — sandboxed Mac App Store build (on hold)
+
+### Website
+`website/` is deployed as-is by Cloudflare Pages (no build step). Besides the page itself it holds:
+- `_headers` — security headers, including a Content Security Policy that allows only this site and PilotFox analytics. Add any new third-party origin there.
+- `_redirects` and `404.html` — old `/privacy.html` and `/terms.html` URLs redirect to the modals, and unknown URLs get a real 404.
+- `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` — hand-written crawler files. Update `llms-full.txt` and the sitemap `<lastmod>` when page copy changes.
+
+Check the site before pushing:
+
+```bash
+python3 script/check_website.py      # static checks, Python 3 stdlib only
+node script/website_smoke_test.js    # serves website/ like Cloudflare Pages and drives the demo in Chromium (needs Playwright)
+```
+
+AI coding agents: see `AGENTS.md` (`CLAUDE.md` imports it).
 
 ---
 

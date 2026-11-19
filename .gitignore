@@ -38,3 +38,7 @@ Thumbs.db
 .scratch/
 scratch/
 .build-appstore/
+
+# Ironclad audit scratch output (report, findings.json and gate summary are committed)
+.security-audit/scanner-output/
+.security-audit/gate-logs/
