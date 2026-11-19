@@ -1,0 +1,278 @@
+{
+  "project": "MacKitty",
+  "audited_commit": "63c0275",
+  "date": "2026-11-19",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 1,
+    "info": 0
+  },
+  "findings": [
+    {
+      "cwe": "CWE-359",
+      "owasp": "A04:2021",
+      "test": "script/check_website.py: privacy notice discloses every third-party script",
+      "requires_human_action": true,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": "Confirm the wording matches your PilotFox configuration (e.g. whether visitor IDs are stored in localStorage) and whether you need a consent banner for EU visitors.",
+      "status": "fixed",
+      "id": "SEC-001",
+      "category": "security",
+      "title": "Website privacy notice says 'no cookies or trackers' while loading PilotFox analytics",
+      "severity": "medium",
+      "locations": [
+        {
+          "file": "website/index.html",
+          "line": 910
+        }
+      ],
+      "description": "The #privacy modal claimed the website uses no trackers and the app/site collect no analytics, but index.html loads the PilotFox analytics script, which records page views, clicks and outbound links.",
+      "impact": "Visitors are told they aren't tracked when they are; a transparency problem under GDPR/ePrivacy and for App Store review, which links to this policy.",
+      "remediation": "Privacy notice now names PilotFox and what it counts; the 'collects nothing' line is scoped to the app.",
+      "fix_commit": "3d65407"
+    },
+    {
+      "cwe": "CWE-829",
+      "owasp": "A08:2021",
+      "test": "YAML parse; same code as before",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEC-003",
+      "category": "security",
+      "title": "Release workflow runs tag-pinned third-party actions with signing secrets in job env",
+      "severity": "medium",
+      "locations": [
+        {
+          "file": ".github/workflows/build-notarize.yml",
+          "line": 310
+        }
+      ],
+      "description": "Developer ID certificate, its password and notarization credentials are exposed to every step through job-level env, and actions were referenced by mutable tags (softprops/action-gh-release@v2 etc.).",
+      "impact": "If an action's tag were moved or hijacked, the new code would run with the signing certificate and could sign malware as MacKitty.",
+      "remediation": "Pinned all four actions to the commit SHAs their tags point to today.",
+      "fix_commit": "ba75f05"
+    },
+    {
+      "cwe": "CWE-693",
+      "owasp": "A05:2021",
+      "test": "script/website_smoke_test.js: no CSP violations, demo works; analytics beacons verified",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEC-002",
+      "category": "security",
+      "title": "No Content-Security-Policy, HSTS or clickjacking protection",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/_headers",
+          "line": 5
+        }
+      ],
+      "description": "Cloudflare Pages served only its defaults (nosniff, referrer-policy).",
+      "impact": "No defence-in-depth against injected scripts (e.g. a compromised third-party script origin), framing/clickjacking, or protocol downgrade.",
+      "remediation": "Added website/_headers: CSP (self + pilotfox.app), HSTS, X-Frame-Options/frame-ancestors, Permissions-Policy, COOP.",
+      "fix_commit": "c604677"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/website_smoke_test.js: unknown URL \u2192 404, redirects",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-001",
+      "category": "seo",
+      "title": "Soft 404s: every unknown URL returns the homepage with HTTP 200",
+      "severity": "medium",
+      "locations": [
+        {
+          "file": "website/404.html",
+          "line": 1
+        }
+      ],
+      "description": "Without 404.html Cloudflare Pages runs in SPA mode; /anything, /favicon.ico, /llms-full.txt and the deleted /privacy.html and /terms.html all returned the homepage with 200.",
+      "impact": "Search engines see duplicate soft-404 pages; old legal URLs no longer opened the policy.",
+      "remediation": "Added noindex 404.html and _redirects (legal URLs \u2192 #privacy/#terms modals, /favicon.ico \u2192 favicon).",
+      "fix_commit": "f9c33b6"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py: no image > 200 KB; screenshots identical",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-002",
+      "category": "seo",
+      "title": "853 KB logo loaded for 22\u201354px icons",
+      "severity": "medium",
+      "locations": [
+        {
+          "file": "website/index.html",
+          "line": 154
+        }
+      ],
+      "description": "Five <img> tags and the apple-touch-icon used the 1024x1024 logo.png.",
+      "impact": "~850 KB extra on first load, hurting LCP on mobile.",
+      "remediation": "256px logo (56 KB), 180px apple-touch-icon, explicit width/height, lazy footer icon.",
+      "fix_commit": "977729d"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py: JSON-LD @id references resolve",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-003",
+      "category": "seo",
+      "title": "JSON-LD WebSite.publisher references an undefined @id",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/index.html",
+          "line": 49
+        }
+      ],
+      "description": "@id https://geeksdesigns.com/#organization was referenced but never defined.",
+      "impact": "Parsers can't resolve the publisher entity.",
+      "remediation": "Added the Organization node; app also references it; added @id/url/downloadUrl.",
+      "fix_commit": "2cfe9a6"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-004",
+      "category": "seo",
+      "title": "Title (72 chars) and description (178 chars) truncated in results",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/index.html",
+          "line": 11
+        }
+      ],
+      "description": "Both exceeded what Google shows.",
+      "impact": "'Mac Cleaner' cut from the title in results.",
+      "remediation": "47-char title, 154-char description.",
+      "fix_commit": "1a8c3fd"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-005",
+      "category": "seo",
+      "title": "llms.txt without Markdown links; no llms-full.txt",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/llms.txt",
+          "line": 1
+        }
+      ],
+      "description": "Links were plain text; /llms-full.txt returned the homepage.",
+      "impact": "AI tools following llmstxt.org found no links or full text.",
+      "remediation": "Rewrote llms.txt in llmstxt.org format; added llms-full.txt.",
+      "fix_commit": "0f00365"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "SEO-006",
+      "category": "seo",
+      "title": "Stale sitemap lastmod",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/sitemap.xml",
+          "line": 5
+        }
+      ],
+      "description": "lastmod 2026-09-06 although content changed since.",
+      "impact": "Crawlers may deprioritise recrawl.",
+      "remediation": "Updated to 2026-11-19.",
+      "fix_commit": "f88ec78"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "script/check_website.py + check_social_meta.py",
+      "requires_human_action": true,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": "After deploying, re-scrape: Facebook Sharing Debugger, LinkedIn Post Inspector, paste into the X composer.",
+      "status": "fixed",
+      "id": "SOC-001",
+      "category": "social",
+      "title": "Link-preview image is a 1024x1024, 853 KB square icon without alt",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "website/index.html",
+          "line": 23
+        }
+      ],
+      "description": "og:image/twitter:image used logo.png.",
+      "impact": "Cropped large cards; WhatsApp may drop images over ~300 KB.",
+      "remediation": "1200x630, 40 KB og-image.jpg with width/height/type/alt and twitter:image:alt.",
+      "fix_commit": "be3c234"
+    },
+    {
+      "cwe": null,
+      "owasp": null,
+      "test": "check_docs.py passes",
+      "requires_human_action": false,
+      "accepted_reason": null,
+      "accepted_by": null,
+      "human_action": null,
+      "status": "fixed",
+      "id": "DOC-001",
+      "category": "docs",
+      "title": "No AGENTS.md/CLAUDE.md; .env vars undocumented",
+      "severity": "low",
+      "locations": [
+        {
+          "file": "AGENTS.md",
+          "line": 1
+        }
+      ],
+      "description": "No agent instructions; package_and_notarize_local.sh reads APPLE_ID/APPLE_TEAM_ID/APPLE_APP_SPECIFIC_PASSWORD with no .env.example.",
+      "impact": "Agents and contributors miss the CSP/privacy/SEO conventions and the app safety rules.",
+      "remediation": "Added AGENTS.md, CLAUDE.md (@AGENTS.md), .env.example, README website section.",
+      "fix_commit": "16f1bda"
+    }
+  ]
+}
