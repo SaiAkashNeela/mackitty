@@ -49,7 +49,10 @@
     "@graph": [
       {
         "@type": "SoftwareApplication",
+        "@id": "https://mackitty.com/#app",
         "name": "MacKitty",
+        "url": "https://mackitty.com/",
+        "downloadUrl": "https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg",
         "operatingSystem": "macOS 14.0 or later",
         "applicationCategory": "UtilitiesApplication",
         "offers": {
@@ -70,10 +73,14 @@
           "url": "https://saiakash.dev"
         },
         "publisher": {
-          "@type": "Organization",
-          "name": "Geeks Designs",
-          "url": "https://geeksdesigns.com"
+          "@id": "https://geeksdesigns.com/#organization"
         }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://geeksdesigns.com/#organization",
+        "name": "Geeks Designs",
+        "url": "https://geeksdesigns.com"
       },
       {
         "@type": "WebSite",
