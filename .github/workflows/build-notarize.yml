@@ -14,6 +14,9 @@ on:
       - '**/*.md'
       - 'AppStore/**'
       - 'script/stamp_website_assets.sh'
+      - 'script/check_website.py'
+      - 'script/website_smoke_test.js'
+      - '.env.example'
       - '.gitignore'
   workflow_dispatch:
 
