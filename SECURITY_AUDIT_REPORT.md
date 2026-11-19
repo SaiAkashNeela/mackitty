@@ -155,7 +155,25 @@ Not applicable: there is no server code, API, cache layer or form to rate-limit.
 **Impact** — Low. **Fix** — commit `f88ec78`.
 
 ## 10. Merge gate
-See `.security-audit/merge-gate.md` (pasted below at the end of the run).
+## Ironclad merge gate: ✅ READY TO MERGE
+
+Base: `main` · Commit: `00c31bc` · 2026-11-19T13:13Z
+
+| Check | Result | Details |
+|---|---|---|
+| Clean working tree | ✅ pass |  |
+| Up to date with origin/main | ✅ pass |  |
+| python3 script/check_website.py | ✅ pass | `python3 script/check_website.py` |
+| node script/website_smoke_test.js | ✅ pass | `node script/website_smoke_test.js` |
+| No new skips/suppressions | ✅ pass |  |
+| No secrets in branch | ⚠️ warn | pattern check only — gitleaks not installed |
+| Dependency audit | ⚠️ warn | no audit tool available for this stack — note in PR |
+| No open critical/high findings | ✅ pass |  |
+| Docs up to date | ✅ pass | check_docs.py |
+
+_Gate by [Ironclad](https://github.com/saiakashneela) · Sai Akash Neela_
+
+The gate ran without `--url`, because `check_social_meta.py` fetches `og:image` from production, which won't have `og-image.jpg` until this branch is deployed. The SEO and social checks passed against a local server (SEO 22/22; social 10/10 on the built HTML).
 
 ## 11. Remediation log
 | ID | Title | Commit | Test added | Notes |
