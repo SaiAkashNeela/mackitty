@@ -8,8 +8,8 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#fbfbfd">
   
-  <title>MacKitty — Allow Kitty to Take Care of Your Mac | Fast, Safe Mac Cleaner</title>
-  <meta name="description" content="Allow Kitty to take care of your Mac. Kitty can do everything. Kitty can save you from bloated Xcode caches, Homebrew residue, and mystery gigabytes. 100% native Swift for macOS.">
+  <title>MacKitty — Fast, Safe & Free Native Mac Cleaner</title>
+  <meta name="description" content="Allow Kitty to take care of your Mac. Safely clear Xcode DerivedData, browser and npm caches and old logs. You review everything first. 100% native Swift.">
   <meta name="keywords" content="Mac cleaner, clean my mac, mac disk cleaner, Xcode cache cleaner, developer mac cleanup, native swift mac app, apple silicon cleaner">
   <meta name="author" content="Sai Akash Neela">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -20,21 +20,27 @@
   <meta property="og:url" content="https://mackitty.com/">
   <meta property="og:title" content="MacKitty — Allow Kitty to Take Care of Your Mac">
   <meta property="og:description" content="Kitty can do everything. Kitty can save you. Reclaim tens of gigabytes of developer caches and system residue safely with a native Mac companion.">
-  <meta property="og:image" content="https://mackitty.com/assets/logo.png">
+  <meta property="og:image" content="https://mackitty.com/assets/og-image.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="MacKitty app icon with the tagline: Allow Kitty to take care of your Mac. Fast, safe, 100% native Mac cleaner.">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="MacKitty">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="MacKitty — Allow Kitty to Take Care of Your Mac">
   <meta name="twitter:description" content="Kitty can do everything. Kitty can save you. Zero personal file deletions. 100% Native Swift for macOS.">
-  <meta name="twitter:image" content="https://mackitty.com/assets/logo.png">
+  <meta name="twitter:image" content="https://mackitty.com/assets/og-image.jpg">
+  <meta name="twitter:image:alt" content="MacKitty app icon with the tagline: Allow Kitty to take care of your Mac. Fast, safe, 100% native Mac cleaner.">
 
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=bc456d1c">
+  <link rel="stylesheet" href="styles.css?v=6c8e9130">
 
   <!-- Structured JSON-LD Schema (King Status SEO & AI Search Engine Graph) -->
   <script type="application/ld+json">
@@ -43,7 +49,10 @@
     "@graph": [
       {
         "@type": "SoftwareApplication",
+        "@id": "https://mackitty.com/#app",
         "name": "MacKitty",
+        "url": "https://mackitty.com/",
+        "downloadUrl": "https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg",
         "operatingSystem": "macOS 14.0 or later",
         "applicationCategory": "UtilitiesApplication",
         "offers": {
@@ -64,10 +73,14 @@
           "url": "https://saiakash.dev"
         },
         "publisher": {
-          "@type": "Organization",
-          "name": "Geeks Designs",
-          "url": "https://geeksdesigns.com"
+          "@id": "https://geeksdesigns.com/#organization"
         }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://geeksdesigns.com/#organization",
+        "name": "Geeks Designs",
+        "url": "https://geeksdesigns.com"
       },
       {
         "@type": "WebSite",
@@ -138,7 +151,7 @@
   <header class="site-header">
     <div class="header-container">
       <a href="#" class="brand-badge">
-        <img src="assets/logo.png" alt="MacKitty Icon" class="brand-icon">
+        <img src="assets/logo-256.png" alt="MacKitty Icon" class="brand-icon" width="28" height="28">
         <span class="brand-name">MacKitty</span>
         <span class="brand-tag">macOS Native</span>
       </a>
@@ -274,7 +287,7 @@
           <!-- Menu bar popover (TrayMiniDashboardView) -->
           <div id="tray-popover" class="tray-popover" role="dialog" aria-label="MacKitty menu bar">
             <div class="tray-head">
-              <img src="assets/logo.png" alt="" class="tray-head-logo">
+              <img src="assets/logo-256.png" alt="" class="tray-head-logo" width="32" height="32">
               <div class="tray-head-text">
                 <div class="tray-head-title">MacKitty</div>
                 <div class="tray-head-status"><span id="tray-status-dot" class="tray-dot"></span><span id="tray-status-text">Storage filling up</span></div>
@@ -347,7 +360,7 @@
               <span class="mk-tl mk-tl-zoom"></span>
             </div>
             <div class="mk-brand">
-              <img src="assets/logo.png" alt="">
+              <img src="assets/logo-256.png" alt="" width="22" height="22">
               <span>MacKitty</span>
             </div>
             <div class="mk-seg mk-topseg" role="tablist" aria-label="MacKitty sections">
@@ -648,7 +661,7 @@
             <!-- Uninstall confirmation alert -->
             <div id="mk-alert" class="mk-sheet-backdrop" aria-hidden="true">
               <div class="mk-alert" role="alertdialog" aria-labelledby="mk-alert-title">
-                <img src="assets/logo.png" alt="" class="mk-alert-icon">
+                <img src="assets/logo-256.png" alt="" class="mk-alert-icon" width="52" height="52">
                 <h4 id="mk-alert-title">Move app to Trash?</h4>
                 <p>The application will be moved to the Trash. You can restore it from there.</p>
                 <div class="mk-alert-actions">
@@ -839,7 +852,7 @@
          ==================================================================== -->
     <section id="download" class="editorial-section">
       <div class="download-card">
-        <img src="assets/logo.png" alt="MacKitty Icon" class="logo">
+        <img src="assets/logo-256.png" alt="MacKitty Icon" class="logo" width="54" height="54" loading="lazy">
         <h2 class="download-title">
           Allow Kitty to take care of your Mac today.
         </h2>
@@ -890,11 +903,11 @@
     </div>
     <div class="legal-body">
       <ul>
-        <li><strong>No data collection.</strong> No accounts, analytics, tracking or telemetry.</li>
+        <li><strong>The app collects nothing.</strong> No accounts, analytics, tracking or telemetry in MacKitty.</li>
         <li><strong>Runs on your Mac.</strong> Scans and cleanups happen locally; nothing about your files leaves your computer.</li>
         <li><strong>Only cache and log folders.</strong> Documents, Desktop, Downloads, Photos, iCloud, Keychain and Git repositories are never read or removed.</li>
         <li><strong>One network request.</strong> MacKitty asks GitHub whether a newer version exists. No personal data is sent.</li>
-        <li><strong>This website</strong> uses no cookies or trackers.</li>
+        <li><strong>This website</strong> uses <a href="https://pilotfox.app" target="_blank" rel="noopener">PilotFox</a> analytics to count visits and clicks. It sets no cookies and has nothing to do with the app or your files.</li>
       </ul>
       <p class="legal-meta">Questions? Open an issue on <a href="https://github.com/SaiAkashNeela/mackitty/issues" target="_blank" rel="noopener">GitHub</a>.</p>
     </div>

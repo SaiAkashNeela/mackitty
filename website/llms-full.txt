@@ -1,0 +1,105 @@
+# MacKitty — Full Content
+
+> MacKitty is a free, fast, 100% native Swift disk companion and cache cleaner for macOS 14 (Sonoma) and later. It safely recovers gigabytes of disk space from developer caches, browser caches and old logs without ever touching personal documents, photos or Git projects. Allow Kitty to take care of your Mac.
+
+This file holds the full text of https://mackitty.com/ for AI assistants. Keep it in sync with website/index.html.
+
+---
+
+## Overview
+Source: https://mackitty.com/
+Last updated: 2026-11-19
+
+Allow Kitty to take care of your Mac. Kitty can do everything. Kitty can save you.
+
+MacKitty is a featherweight macOS disk companion that isolates bloated developer caches, stale build artifacts and system clutter — safely, with zero personal file deletions. It is 100% native Swift and a Universal Binary for Apple Silicon and Intel Macs.
+
+- Download (free): https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg
+- Source code: https://github.com/SaiAkashNeela/mackitty
+
+What the app does:
+
+- **One-screen dashboard**: storage donut (used / reclaimable / free), live CPU and memory charts, battery and network status, a per-cleanup history chart and lifetime totals.
+- **Guided scan and clean**: a scan only measures folders; you get a sortable review list and confirm before anything is removed.
+- **Menu bar popover**: storage, live vitals and a one-click scan from the menu bar.
+- **Apps manager**: search installed applications, reveal them in Finder, or uninstall them together with their leftovers (support files, caches, preferences, launch agents and helpers).
+- **Speed tab**: memory pressure, swap use, uptime and the apps and tools using the most memory, each with a Quit button.
+- **Verified auto-updater**: only installs builds signed by MacKitty's Developer ID team and notarized by Apple.
+
+---
+
+## Under the hood
+Source: https://mackitty.com/#under-the-hood
+Last updated: 2026-11-19
+
+Many Mac cleaners are heavy, subscription-driven and vague about what they delete. MacKitty is a small native Swift app that shows you exactly what it touches.
+
+### Rebuildable targets (what MacKitty cleans)
+- `~/Library/Developer/Xcode/DerivedData` — intermediate object files, symbol indexes and module caches that Xcode recreates automatically on the next build.
+- `~/Library/Caches` — Safari, Chrome, Firefox and other app caches that apps rebuild on demand. Apple's own caches (iCloud, CloudKit) and caches of running apps are always skipped.
+- `~/.npm` — cached npm package tarballs that are re-downloaded when needed.
+- `~/Library/Logs` — old app logs and crash/diagnostic reports.
+- Developer caches: npm, uv, Bun, pnpm, Cargo, Gradle and Expo (your Expo login and signing files stay), shown only when installed and skipped while a tool is using them.
+- Code projects in the folders you choose: `node_modules`, build output, `dist`/`out`, Playwright output, Python `.venv`, `__pycache__` and test caches. Git-tracked folders are never offered.
+- Old Simulator runtimes, iOS Device Support files, Android emulators, Docker images no container uses and unused build cache, and the Trash (opt-in).
+- Every row lists exactly which files and folders Clean will remove, with their sizes.
+
+### Strict boundaries (what MacKitty never touches)
+- `~/Documents`, `~/Desktop`, `~/Downloads` — no personal documents, photos or desktop files are ever targeted.
+- `.git/` repositories — uncommitted source code, branches, stashes and project files are excluded from all scans.
+- Keychain and browser sessions — passwords, saved logins, cookies and tokens are never read or removed; only browser cache folders are cleaned.
+- System and signed binaries — the read-only macOS Sealed System Volume and `/System` are untouched. Apps in `/Applications` are only removed when you uninstall them.
+
+MacKitty runs with your normal user permissions, installs no background daemons and loads no kernel extensions. The only time it asks for your admin password is when you uninstall an app that left a launch daemon or privileged helper in `/Library`.
+
+---
+
+## Safety guarantee
+Source: https://mackitty.com/#safety-guarantee
+Last updated: 2026-11-19
+
+When MacKitty starts a scan, macOS Transparency, Consent, and Control (TCC) prompts appear. Since macOS Sonoma, Apple enforces folder-level access policies: when MacKitty scans for Xcode artifacts or cache bloat, macOS asks you to confirm read permission for that folder.
+
+No personal data or files are ever deleted. Every cleanup is shown to you in the review screen first, where you can uncheck any folder, inspect it in Finder with one click, or skip it entirely. Scans and cleanups can be cancelled at any moment.
+
+---
+
+## Frequently asked questions
+Source: https://mackitty.com/#faq
+Last updated: 2026-11-19
+
+### Does MacKitty ever delete my personal documents, photos, or desktop files?
+Never. MacKitty only inspects rebuildable build directories (like `~/Library/Developer/Xcode/DerivedData`), package manager caches and log files. Your Documents, Desktop, Pictures and iCloud folders are never touched.
+
+### Why does macOS show permission popups when MacKitty scans?
+macOS requires your consent before an app reads metadata from developer folders (such as `~/Library/Developer`) and application caches. Click Allow so MacKitty can report recoverable disk space. Nothing is modified or removed during a scan.
+
+### Is it really safe to clean Xcode DerivedData?
+Yes. DerivedData holds temporary build artifacts, index files and intermediate logs that Xcode produces while compiling. Deleting it is a standard fix for Xcode build glitches, and Xcode recreates it on the next build.
+
+### How does MacKitty compare to commercial subscription cleaners?
+Commercial cleaners are typically 300+ MB Electron or cross-platform apps that install background launch daemons, send telemetry and charge monthly fees. MacKitty is pure Swift, uses no CPU in the background, has zero telemetry and no subscription.
+
+### What are the system requirements?
+macOS 14.0 (Sonoma) or later, including macOS 15 (Sequoia). MacKitty is a Universal Binary optimized for Apple Silicon (M1, M2, M3, M4, Pro, Max, Ultra) and Intel 64-bit Macs.
+
+---
+
+## Privacy
+Source: https://mackitty.com/#privacy
+Last updated: 2026-11-19
+
+- The app collects nothing: no accounts, analytics, tracking or telemetry in MacKitty.
+- Scans and cleanups run locally; nothing about your files leaves your computer.
+- Only cache and log folders are cleaned. Documents, Desktop, Downloads, Photos, iCloud, Keychain and Git repositories are never read or removed.
+- The app makes one network request: it asks GitHub whether a newer version exists. No personal data is sent.
+- The website uses PilotFox analytics to count visits and clicks. It sets no cookies and has nothing to do with the app or your files.
+
+## Terms
+Source: https://mackitty.com/#terms
+Last updated: 2026-11-19
+
+- Free to use for personal and commercial use on Macs you own or control.
+- Nothing is deleted until you review the list and confirm. Please check what you select.
+- MacKitty is provided "as is"; the developer isn't liable for any loss arising from its use.
+- These terms may be updated with new releases.

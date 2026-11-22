@@ -1,26 +1,33 @@
 # MacKitty
 
-> Allow Kitty to take care of your Mac. Kitty can do everything. Kitty can save you.
+> MacKitty is a free, fast, 100% native Swift disk companion and cache cleaner for macOS 14 (Sonoma) and later. It safely recovers gigabytes of disk space from developer caches, browser caches and old logs without ever touching personal documents, photos or Git projects. Allow Kitty to take care of your Mac.
 
-MacKitty is a fast, 100% native Swift disk companion and cache reclaimer for macOS (Sonoma 14.0+ and Sequoia 15.0+). It safely recovers gigabytes of disk space from developer caches and intermediate build clutter without ever touching personal documents, photos, or Git projects.
+MacKitty is a native Swift cleaner and speed check for macOS: it frees space from developer and app caches, code project build output, old simulators and emulators, and shows what is slowing the Mac down. It runs with normal user permissions (an admin password only to remove a helper an app left in /Library), has no accounts and no telemetry in the app, and is a Universal Binary for Apple Silicon (M1–M4) and Intel Macs. The full text of the website is in [llms-full.txt](https://mackitty.com/llms-full.txt).
 
 ## Core Features
 - **Safe, Reviewed Cleanup**: Targets Xcode DerivedData, Safari/Chrome/Firefox caches, other app caches (skipping Apple's own and running apps), the npm cache, and app logs. Every cleanup is reviewed and confirmed by the user.
 - **Strict Safety Boundary**: Only a fixed list of rebuildable cache and log folders is ever cleaned; `~/Documents`, `~/Desktop`, `~/Downloads`, Photos, `.git/` repositories, Keychain and macOS system files are never touched.
 - **One-Screen Dashboard & Menu Bar Popover**: Light, native dashboard with storage, live CPU/memory charts, battery, network and cleanup history; a menu bar popover shows the same at a glance.
 - **Verified Updates**: The built-in updater only installs builds signed by MacKitty's Developer ID team and notarized by Apple.
-- **100% Native Architecture**: Written in Swift and SwiftUI, with zero telemetry or advertising trackers.
+- **100% Native Architecture**: Written in Swift and SwiftUI, with zero telemetry or advertising trackers in the app.
 - **Universal Binary**: Optimized natively for Apple Silicon (M1, M2, M3, M4) and Intel x86_64 Macs.
 
 ## Common Questions & Answers
 - **Why does macOS show permission popups during scans?**: macOS enforces Transparency, Consent, and Control (TCC) to protect user folders. Users must click "Allow" so MacKitty can inspect cache directory sizes. No files are altered or deleted during inspection.
 - **Is deleting Xcode DerivedData safe?**: Yes. DerivedData holds ephemeral build products and symbol indexes that Xcode automatically regenerates on subsequent builds.
-- **How does MacKitty compare to commercial cleaners?**: Commercial cleaners are frequently 300+ MB Electron applications bundled with background daemons and recurring subscriptions. MacKitty is open, lightweight, native Swift, and subscription-free.
+- **How does MacKitty compare to commercial cleaners?**: Commercial cleaners are frequently 300+ MB Electron applications bundled with background daemons and recurring subscriptions. MacKitty is lightweight, native Swift, and subscription-free.
 
-## Links & Distribution
-- Website: https://mackitty.com/
-- GitHub Repository: https://github.com/SaiAkashNeela/mackitty
-- Direct Download (.dmg): https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg
-- Releases: https://github.com/SaiAkashNeela/mackitty/releases
+## Website
+- [MacKitty home page](https://mackitty.com/): Product overview, interactive app demo, safety guarantee and FAQ
+- [Safety guarantee](https://mackitty.com/#safety-guarantee): Exactly which folders are cleaned and which are never touched
+- [FAQ](https://mackitty.com/#faq): Personal files, macOS permission prompts, Xcode DerivedData, system requirements
+- [Privacy](https://mackitty.com/#privacy): What the app and the website collect
+
+## Download & Source
+- [Download MacKitty (.dmg)](https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg): Latest signed and notarized release
+- [Releases](https://github.com/SaiAkashNeela/mackitty/releases): Release notes and previous versions
+- [GitHub repository](https://github.com/SaiAkashNeela/mackitty): Source code, issues and support
+
+## Optional
 - Creator: Sai Akash Neela (https://saiakashneela.com, https://saiakash.dev, https://github.com/SaiAkashNeela)
 - Publisher: Geeks Designs (https://geeksdesigns.com)

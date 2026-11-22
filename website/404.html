@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#fbfbfd">
+  <title>Page not found — MacKitty</title>
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png">
+  <style>
+    :root { --bg: #fbfbfd; --ink: #1d1d1f; --muted: #6e6e73; --accent: #0071e3; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      background: var(--bg); color: var(--ink);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      text-align: center;
+    }
+    main { max-width: 420px; }
+    img { width: 64px; height: 64px; border-radius: 14px; }
+    h1 { font-size: 28px; letter-spacing: -0.02em; margin: 18px 0 8px; }
+    p { color: var(--muted); margin: 0 0 24px; }
+    a.btn {
+      display: inline-block; padding: 10px 20px; border-radius: 999px;
+      background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+    }
+    a.btn:focus-visible { outline: 3px solid rgba(0, 113, 227, 0.35); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/assets/favicon.png" alt="MacKitty" width="64" height="64">
+    <h1>Kitty couldn't find that page.</h1>
+    <p>The page you're looking for doesn't exist or has moved.</p>
+    <a class="btn" href="/">Back to MacKitty</a>
+  </main>
+</body>
+</html>
