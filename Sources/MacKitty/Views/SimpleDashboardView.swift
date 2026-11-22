@@ -1807,7 +1807,7 @@ private struct AppRow: View {
                 Text(app.name)
                     .font(Theme.body(13, .medium))
                     .foregroundStyle(Theme.textPrimary)
-                Text(app.path)
+                Text((app.path as NSString).abbreviatingWithTildeInPath)
                     .font(Theme.mono(11))
                     .foregroundStyle(Theme.textTertiary)
                     .lineLimit(1)

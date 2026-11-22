@@ -25,9 +25,9 @@ MacKitty: a native macOS cache cleaner and system monitor (Swift 5.9 / SwiftUI +
 - On-page icons use `website/assets/logo-256.png`; keep images over 200 KB off the page.
 
 ## App safety rules (do not weaken)
-- Cleanup is limited to the curated rebuildable cache/log paths listed in README.md. Never add `/System`, `/Library`, `/Applications`, or personal folders (Documents, Desktop, Downloads, Photos, iCloud), Keychain or `.git` directories.
+- Cleanup is limited to the curated rebuildable cache/log paths listed in README.md. Never add `/System`, or personal folders (Documents, Desktop, Downloads, Photos, iCloud), Keychain or `.git` directories. `/Applications` and `/Library` are touched only by an uninstall the user starts, for that one app's bundle and leftovers.
 - Scans never delete. Every removal is reviewed and confirmed by the user, and stays cancellable.
-- No `sudo`/root, daemons or kernel extensions. No telemetry in the app.
+- No `sudo`/root, daemons or kernel extensions. The one exception: removing an uninstalled app's launch daemons and privileged helpers, through the standard macOS admin-password prompt. No telemetry in the app.
 - The updater must keep verifying the Developer ID team, bundle ID, Gatekeeper/notarization and an HTTPS GitHub download.
 
 ## Testing rules
