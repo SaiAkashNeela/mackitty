@@ -13,13 +13,18 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "MacKitty",
-            path: "Sources/MoleMate",
+            path: "Sources/MacKitty",
             resources: [
                 .copy("bg.mp4"),
                 .copy("logo.png"),
                 .copy("AppIcon.icns"),
                 .copy("tray_icon.png")
             ]
+        ),
+        .testTarget(
+            name: "MacKittyTests",
+            dependencies: ["MacKitty"],
+            path: "Tests/MacKittyTests"
         )
     ]
 )

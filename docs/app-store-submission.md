@@ -7,13 +7,13 @@ MacKitty ships two builds from the same code:
 | Signed with | Developer ID Application | Apple Distribution |
 | Sandbox | No | **Required** (`AppStore/MacKitty.entitlements`) |
 | Updates | Built-in updater | App Store |
-| Mole CLI, Docker cleanup, Terminal helpers | Yes | No (sandbox can't launch other tools) |
+| Docker cleanup, Terminal helpers | Yes | No (sandbox can't launch other tools) |
 | Folder access | Direct | User grants their home folder once |
 | Build command | CI / `script/package_and_notarize_local.sh` | `script/build_appstore.sh` |
 
 The App Store build is compiled with `-DAPPSTORE` (`isAppStoreBuild` in
-`Sources/MoleMate/Support/SandboxAccess.swift`), which turns off the updater,
-Mole CLI, Docker, Terminal automation and the move-to-Applications prompt.
+`Sources/MacKitty/Support/SandboxAccess.swift`), which turns off the updater,
+Docker, Terminal automation and the move-to-Applications prompt.
 
 ## 1. One-time setup in your Apple Developer account
 

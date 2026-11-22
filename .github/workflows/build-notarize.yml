@@ -125,14 +125,14 @@ jobs:
           fi
 
           # Copy App Assets
-          if [ -f "Sources/MoleMate/AppIcon.icns" ]; then
-            cp "Sources/MoleMate/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
+          if [ -f "Sources/MacKitty/AppIcon.icns" ]; then
+            cp "Sources/MacKitty/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
           fi
-          if [ -f "Sources/MoleMate/logo.png" ]; then
-            cp "Sources/MoleMate/logo.png" "$RESOURCES_DIR/logo.png"
+          if [ -f "Sources/MacKitty/logo.png" ]; then
+            cp "Sources/MacKitty/logo.png" "$RESOURCES_DIR/logo.png"
           fi
-          if [ -f "Sources/MoleMate/tray_icon.png" ]; then
-            cp "Sources/MoleMate/tray_icon.png" "$RESOURCES_DIR/tray_icon.png"
+          if [ -f "Sources/MacKitty/tray_icon.png" ]; then
+            cp "Sources/MacKitty/tray_icon.png" "$RESOURCES_DIR/tray_icon.png"
           fi
 
           # Generate Info.plist with exact version
