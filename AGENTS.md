@@ -3,7 +3,7 @@
 ## Project
 MacKitty: a native macOS cache cleaner and system monitor (Swift 5.9 / SwiftUI + AppKit, macOS 14+), plus its marketing site.
 
-- `Sources/MoleMate/` — the app (Swift package target `MacKitty`, see `Package.swift`). `Views/`, `Services/` (cleaner, Mole CLI bridge, system monitor, updater), `Stores/`, `Support/` (`Theme.swift` holds the design tokens).
+- `Sources/MacKitty/` — the app (Swift package target `MacKitty`, see `Package.swift`). `Views/`, `Services/` (native cleaner, project scanner, memory report, app leftovers, system monitor, updater), `Stores/`, `Support/` (`Theme.swift` holds the design tokens).
 - `website/` — static site for https://mackitty.com, deployed by Cloudflare Pages with `website/` as the output directory. No build step.
 - `AppStore/`, `script/build_appstore.sh`, `docs/app-store-submission.md` — sandboxed Mac App Store build (on hold).
 - `.github/workflows/build-notarize.yml` — builds, signs, notarizes and releases the DMG on pushes to `main`. It ignores `website/**`, `docs/**` and `*.md`.

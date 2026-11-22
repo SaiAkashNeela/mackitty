@@ -5,30 +5,15 @@ MacKitty is a modern, lightweight native macOS cleaner and live hardware monitor
 
 ---
 
-## ⭐️ Credits & Inspiration
-
-MacKitty is proudly **inspired by and built on top of [Mole](https://github.com/tw93/mole)** by [@tw93](https://github.com/tw93).
-
-Mole is an outstanding, ultra-fast command-line cleaner and optimization utility for macOS. MacKitty acts as a native desktop companion for Mole, bringing:
-- A one-screen dashboard with storage, system health and cleanup history charts
-- Granular review with safe category checkboxes and Finder deep-links
-- Live hardware telemetry (CPU, memory, disk, battery, network)
-- An Apple Menu Bar tray companion with a live mini dashboard popover
-- Automatic detection and warnings for locked caches in open apps (Firefox, Chrome, Safari, Xcode)
-
-Huge thanks to tw93 and the open-source contributors behind the Mole CLI!
-
----
-
 ## 🛡️ Safety Guarantees: Zero Mac-Breaking Deletions
 
 MacKitty is architected around **strict non-destructive safety principles**:
 
 | Safety Feature | How MacKitty Protects Your Mac |
 | :--- | :--- |
-| **Dry-Run Preview First** | Scanning only measures folders (and runs `mo clean --dry-run` when Mole is installed). **Zero files are removed** during a scan. |
-| **Review & Confirm** | Nothing is deleted automatically. You review every area, its path and size, and confirm before anything is removed. Mole's broader `mo clean` set is a separate opt-in row ("Mole Deep Clean"). |
-| **Curated Safe Paths Only** | Cleanup is restricted to regenerable user caches (`~/Library/Caches`), developer artifacts (Xcode `DerivedData`, `~/.npm`) and logs (`~/Library/Logs`). Apple's own caches (`com.apple.*`, e.g. iCloud) and caches of apps that are currently running are always skipped. MacKitty **never touches `/System`, `/Library`, `/Applications`, or personal directories (Documents, Desktop, Downloads, Photos, iCloud)**. |
+| **Dry-Run Preview First** | Scanning only measures folders. **Zero files are removed** during a scan. |
+| **Review & Confirm** | Nothing is deleted automatically. You review every area, its path and size, and confirm before anything is removed. |
+| **Curated Safe Paths Only** | Cleanup is restricted to regenerable user caches (`~/Library/Caches`), developer artifacts (Xcode `DerivedData`, package-manager caches, and build output inside the code folders you choose) and logs (`~/Library/Logs`). Apple's own caches (`com.apple.*`, e.g. iCloud) and caches of apps that are currently running are always skipped. MacKitty **never touches `/System`, `/Library`, `/Applications`, or personal directories (Documents, Desktop, Downloads, Photos, iCloud)**. |
 | **Active App Lock Protection** | Automatically detects when browsers (Firefox, Chrome, Safari, Brave) or developer tools (Xcode) are open, warning you rather than attempting to purge locked databases or causing app crashes. |
 | **Standard User Privileges Only** | MacKitty runs entirely with your normal user permissions. It **never requests `sudo` or root permissions**, installs no persistent background daemons, and injects no kernel extensions. |
 | **Instant Cancellation** | Scans and cleanups can be cancelled at any moment; a cancelled run can never resume or apply stale results. |
@@ -45,11 +30,17 @@ MacKitty is architected around **strict non-destructive safety principles**:
   - Xcode Derived Data
   - Safari, Chrome and Firefox caches
   - npm & Node cache
+  - Developer caches: Gradle, uv, Bun, pnpm and Cargo (shown only when installed; skipped while a build or tool is using them)
+  - Old Simulator runtimes (the newest per platform is kept; Xcode downloads an old one again if needed) and simulators whose runtime is gone
+  - iOS Device Support (debug files Xcode copies from each connected iPhone) and the Expo cache (your Expo login and signing files stay)
+  - Android emulators, one row each, unticked (they hold the apps installed in them)
+  - Trash, unticked (needs Full Disk Access)
   - User app logs
   - Other app caches (excluding Apple and running apps)
-  - Docker dangling images (when Docker is installed)
-  - Mole's full clean set (opt-in, when Mole is installed)
-- **Apps Manager:** Search installed applications, reveal them in Finder, or move them to the Trash.
+  - Docker images no container uses and unused build cache (when Docker is running)
+- **Code Project Cleanup:** Choose your code folders and MacKitty lists each project's `node_modules`, Rust `target`, Gradle/Flutter/Swift build output, CocoaPods `Pods` and framework caches (`.next`, `.turbo`…), `dist`/`out` next to `package.json`, Python `.venv` (next to `pyproject.toml`/`requirements.txt`), `__pycache__` and pytest/mypy/ruff caches, and Playwright output (`test-results`, `.playwright-mcp`). Each folder is recognised by the file that produces it (e.g. `build/` only next to `build.gradle`). Git-tracked folders are never offered. Every project starts ticked; notes flag projects you worked on this week, that are open in a running dev server or that contain a shipped build (`.apk`, `.aab`, `.ipa`), so you can untick them.
+- **Apps Manager:** Search installed applications, reveal them in Finder, or uninstall them. Uninstall also lists what the app left behind (its data, caches, preferences and background helpers, matched by bundle ID) so you can remove those too; helpers in `/Library` ask for your admin password.
+- **Speed:** Memory pressure, swap and uptime, plus the apps and dev servers using the most memory, each with Quit or Stop. Read only when you open the tab; nothing polls.
 - **Verified Auto-Updater:** Checks GitHub Releases and installs signed, notarized updates in place.
 - **100% Private:** No accounts, no data collection, no telemetry, no analytics.
 
@@ -60,11 +51,6 @@ MacKitty is architected around **strict non-destructive safety principles**:
 ### Prerequisites
 - macOS 14.0 (Sonoma) or newer
 - Xcode 15+ or Swift 5.10+ command line tools
-- *(Recommended)* Mole CLI engine installed via Homebrew:
-  ```bash
-  brew install mole
-  ```
-  *(Note: If Mole is not installed, MacKitty runs in safe preview mode with guided instructions.)*
 
 ### Build & Run
 Clone the repository and launch the app using the bundled build script:
@@ -78,9 +64,9 @@ Clone the repository and launch the app using the bundled build script:
 ```
 
 ### Project Layout
-- `Sources/MoleMate/Views/` — SwiftUI screens (`SimpleDashboardView.swift` is the main window, `TrayMiniDashboardView.swift` the menu bar popover)
-- `Sources/MoleMate/Support/Theme.swift` — design tokens (colours, type, card and button styles)
-- `Sources/MoleMate/Services/` — native cleaner, Mole CLI bridge, system monitor, updater
+- `Sources/MacKitty/Views/` — SwiftUI screens (`SimpleDashboardView.swift` is the main window, `TrayMiniDashboardView.swift` the menu bar popover)
+- `Sources/MacKitty/Support/Theme.swift` — design tokens (colours, type, card and button styles)
+- `Sources/MacKitty/Services/` — native cleaner, system monitor, updater
 - `website/` — marketing site with an interactive demo of the app (after editing `website/styles.css` or `website/app.js`, run `./script/stamp_website_assets.sh` so browsers don't reuse a cached copy)
 - `AppStore/`, `script/build_appstore.sh`, `docs/app-store-submission.md` — sandboxed Mac App Store build (on hold)
 
@@ -105,4 +91,3 @@ AI coding agents: see `AGENTS.md` (`CLAUDE.md` imports it).
 
 - **Website:** [mackitty.com](https://mackitty.com)
 - **Email Support:** [hello@mackitty.com](mailto:hello@mackitty.com)
-- **CLI Core Engine:** [github.com/tw93/mole](https://github.com/tw93/mole)

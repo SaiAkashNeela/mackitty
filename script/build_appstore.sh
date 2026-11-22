@@ -40,7 +40,7 @@ UPLOAD="${2:-}"
 echo "Building $APP_NAME $VERSION ($BUILD_NUMBER) for the Mac App Store"
 
 # Universal release build with the APPSTORE flag, which compiles out the
-# self-updater, the Mole CLI integration, Terminal automation and the
+# self-updater, Terminal automation and the
 # move-to-Applications prompt (none are allowed in the App Store sandbox).
 swift build -c release \
   --arch arm64 --arch x86_64 \
@@ -54,7 +54,7 @@ cp "$BIN_DIR/$APP_NAME" "$CONTENTS/MacOS/$APP_NAME"
 if [ -d "$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle" ]; then
   cp -R "$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle" "$CONTENTS/Resources/"
 fi
-cp "$ROOT_DIR/Sources/MoleMate/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
+cp "$ROOT_DIR/Sources/MacKitty/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
 cp "$ROOT_DIR/AppStore/PrivacyInfo.xcprivacy" "$CONTENTS/Resources/PrivacyInfo.xcprivacy"
 cp "$MAS_PROVISIONING_PROFILE" "$CONTENTS/embedded.provisionprofile"
 

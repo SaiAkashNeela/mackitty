@@ -37,14 +37,14 @@ chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 if [ -d "$BIN_PATH/${APP_NAME}_${APP_NAME}.bundle" ]; then
   cp -R "$BIN_PATH/${APP_NAME}_${APP_NAME}.bundle" "$APP_BUNDLE/Contents/Resources/"
 fi
-if [ -f "Sources/MoleMate/AppIcon.icns" ]; then
-  cp "Sources/MoleMate/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
+if [ -f "Sources/MacKitty/AppIcon.icns" ]; then
+  cp "Sources/MacKitty/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 fi
-if [ -f "Sources/MoleMate/logo.png" ]; then
-  cp "Sources/MoleMate/logo.png" "$APP_BUNDLE/Contents/Resources/logo.png"
+if [ -f "Sources/MacKitty/logo.png" ]; then
+  cp "Sources/MacKitty/logo.png" "$APP_BUNDLE/Contents/Resources/logo.png"
 fi
-if [ -f "Sources/MoleMate/tray_icon.png" ]; then
-  cp "Sources/MoleMate/tray_icon.png" "$APP_BUNDLE/Contents/Resources/tray_icon.png"
+if [ -f "Sources/MacKitty/tray_icon.png" ]; then
+  cp "Sources/MacKitty/tray_icon.png" "$APP_BUNDLE/Contents/Resources/tray_icon.png"
 fi
 
 cat > "$APP_BUNDLE/Contents/Info.plist" << EOF

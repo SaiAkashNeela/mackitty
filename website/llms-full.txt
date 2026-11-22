@@ -16,14 +16,14 @@ MacKitty is a featherweight macOS disk companion that isolates bloated developer
 
 - Download (free): https://github.com/SaiAkashNeela/mackitty/releases/latest/download/MacKitty.dmg
 - Source code: https://github.com/SaiAkashNeela/mackitty
-- Built on the open-source Mole CLI: https://github.com/tw93/mole
 
 What the app does:
 
 - **One-screen dashboard**: storage donut (used / reclaimable / free), live CPU and memory charts, battery and network status, a per-cleanup history chart and lifetime totals.
 - **Guided scan and clean**: a scan only measures folders; you get a sortable review list and confirm before anything is removed.
 - **Menu bar popover**: storage, live vitals and a one-click scan from the menu bar.
-- **Apps manager**: search installed applications, reveal them in Finder, or move them to the Trash.
+- **Apps manager**: search installed applications, reveal them in Finder, or uninstall them together with their leftovers (support files, caches, preferences, launch agents and helpers).
+- **Speed tab**: memory pressure, swap use, uptime and the apps and tools using the most memory, each with a Quit button.
 - **Verified auto-updater**: only installs builds signed by MacKitty's Developer ID team and notarized by Apple.
 
 ---
@@ -39,15 +39,18 @@ Many Mac cleaners are heavy, subscription-driven and vague about what they delet
 - `~/Library/Caches` — Safari, Chrome, Firefox and other app caches that apps rebuild on demand. Apple's own caches (iCloud, CloudKit) and caches of running apps are always skipped.
 - `~/.npm` — cached npm package tarballs that are re-downloaded when needed.
 - `~/Library/Logs` — old app logs and crash/diagnostic reports.
-- Docker dangling images (when Docker is installed) and Mole's full clean set (opt-in, when Mole is installed).
+- Developer caches: npm, uv, Bun, pnpm, Cargo, Gradle and Expo (your Expo login and signing files stay), shown only when installed and skipped while a tool is using them.
+- Code projects in the folders you choose: `node_modules`, build output, `dist`/`out`, Playwright output, Python `.venv`, `__pycache__` and test caches. Git-tracked folders are never offered.
+- Old Simulator runtimes, iOS Device Support files, Android emulators, Docker images no container uses and unused build cache, and the Trash (opt-in).
+- Every row lists exactly which files and folders Clean will remove, with their sizes.
 
 ### Strict boundaries (what MacKitty never touches)
 - `~/Documents`, `~/Desktop`, `~/Downloads` — no personal documents, photos or desktop files are ever targeted.
 - `.git/` repositories — uncommitted source code, branches, stashes and project files are excluded from all scans.
 - Keychain and browser sessions — passwords, saved logins, cookies and tokens are never read or removed; only browser cache folders are cleaned.
-- System and signed binaries — the read-only macOS Sealed System Volume, `/System`, `/Library` and `/Applications` are untouched.
+- System and signed binaries — the read-only macOS Sealed System Volume and `/System` are untouched. Apps in `/Applications` are only removed when you uninstall them.
 
-MacKitty runs with your normal user permissions. It never requests sudo or root, installs no background daemons and loads no kernel extensions.
+MacKitty runs with your normal user permissions, installs no background daemons and loads no kernel extensions. The only time it asks for your admin password is when you uninstall an app that left a launch daemon or privileged helper in `/Library`.
 
 ---
 
