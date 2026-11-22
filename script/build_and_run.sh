@@ -36,16 +36,16 @@ if [ -d "$BUILD_DIR/${APP_NAME}_${APP_NAME}.bundle" ]; then
   cp -R "$BUILD_DIR/${APP_NAME}_${APP_NAME}.bundle" "$APP_CONTENTS/Resources/"
 fi
 
-if [ -f "$ROOT_DIR/Sources/MoleMate/AppIcon.icns" ]; then
-  cp "$ROOT_DIR/Sources/MoleMate/AppIcon.icns" "$APP_CONTENTS/Resources/AppIcon.icns"
+if [ -f "$ROOT_DIR/Sources/MacKitty/AppIcon.icns" ]; then
+  cp "$ROOT_DIR/Sources/MacKitty/AppIcon.icns" "$APP_CONTENTS/Resources/AppIcon.icns"
 fi
 
-if [ -f "$ROOT_DIR/Sources/MoleMate/logo.png" ]; then
-  cp "$ROOT_DIR/Sources/MoleMate/logo.png" "$APP_CONTENTS/Resources/logo.png"
+if [ -f "$ROOT_DIR/Sources/MacKitty/logo.png" ]; then
+  cp "$ROOT_DIR/Sources/MacKitty/logo.png" "$APP_CONTENTS/Resources/logo.png"
 fi
 
-if [ -f "$ROOT_DIR/Sources/MoleMate/tray_icon.png" ]; then
-  cp "$ROOT_DIR/Sources/MoleMate/tray_icon.png" "$APP_CONTENTS/Resources/tray_icon.png"
+if [ -f "$ROOT_DIR/Sources/MacKitty/tray_icon.png" ]; then
+  cp "$ROOT_DIR/Sources/MacKitty/tray_icon.png" "$APP_CONTENTS/Resources/tray_icon.png"
 fi
 
 

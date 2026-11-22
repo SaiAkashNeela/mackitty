@@ -518,7 +518,7 @@ body {
 
 /* ==========================================================================
    INTERACTIVE MACOS APP WINDOW (Replica of SimpleDashboardView, light design)
-   Tokens mirror Sources/MoleMate/Support/Theme.swift.
+   Tokens mirror Sources/MacKitty/Support/Theme.swift.
    ========================================================================== */
 .showcase-stage {
   --mk-canvas: #F5F5F7;

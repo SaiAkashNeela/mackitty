@@ -5,7 +5,7 @@
 MacKitty is a fast, 100% native Swift disk companion and cache reclaimer for macOS (Sonoma 14.0+ and Sequoia 15.0+). It safely recovers gigabytes of disk space from developer caches and intermediate build clutter without ever touching personal documents, photos, or Git projects.
 
 ## Core Features
-- **Safe, Reviewed Cleanup**: Targets Xcode DerivedData, Safari/Chrome/Firefox caches, other app caches (skipping Apple's own and running apps), the npm cache, and app logs. Every cleanup is reviewed and confirmed by the user; Mole's broader clean set is an explicit opt-in.
+- **Safe, Reviewed Cleanup**: Targets Xcode DerivedData, Safari/Chrome/Firefox caches, other app caches (skipping Apple's own and running apps), the npm cache, and app logs. Every cleanup is reviewed and confirmed by the user.
 - **Strict Safety Boundary**: Only a fixed list of rebuildable cache and log folders is ever cleaned; `~/Documents`, `~/Desktop`, `~/Downloads`, Photos, `.git/` repositories, Keychain and macOS system files are never touched.
 - **One-Screen Dashboard & Menu Bar Popover**: Light, native dashboard with storage, live CPU/memory charts, battery, network and cleanup history; a menu bar popover shows the same at a glance.
 - **Verified Updates**: The built-in updater only installs builds signed by MacKitty's Developer ID team and notarized by Apple.
