@@ -252,8 +252,7 @@ final class NativeCleanerService: @unchecked Sendable {
     }
 
     private static func displayPath(_ path: String) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
+        (path as NSString).abbreviatingWithTildeInPath
     }
 
     private static func formatted(_ count: Int) -> String {
@@ -559,7 +558,10 @@ final class NativeCleanerService: @unchecked Sendable {
 
         if let list = await run(simctl, ["runtime", "list", "-j"], timeoutSeconds: 30), list.status == 0 {
             for runtime in Self.oldSimulatorRuntimes(fromJSON: Data(list.output.utf8)) where runtime.bytes > 0 {
-                let note = runtime.lastUsed.map { "Last used \(Int(now.timeIntervalSince($0) / 86_400)) days ago" }
+                let note = runtime.lastUsed.map { date -> String in
+                    let days = Int(now.timeIntervalSince(date) / 86_400)
+                    return days == 0 ? "Used today" : "Last used \(days) day\(days == 1 ? "" : "s") ago"
+                }
                 rows.append(CleanupCategory(
                     id: Self.simulatorRuntimePrefix + runtime.identifier,
                     name: runtime.name,

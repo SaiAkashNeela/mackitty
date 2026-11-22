@@ -89,7 +89,6 @@ struct MemoryReport {
     }
 
     private static func displayPath(_ path: String) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
+        (path as NSString).abbreviatingWithTildeInPath
     }
 }

@@ -1,7 +1,22 @@
 # MacKitty 🐱
 > A calmer, cleaner, faster Mac. Zero bloat, zero telemetry.
 
-MacKitty is a modern, lightweight native macOS cleaner and live hardware monitor built with SwiftUI and AppKit. It pairs a clean, light one-screen dashboard with a compact menu bar popover to keep your Mac running smoothly.
+MacKitty is a free, native Swift cleaner for macOS. It frees space from developer and app caches, `node_modules` and build output, Python virtual environments, old simulators and Android emulators, Docker and the Trash, and lists every file and folder before it deletes anything. The Speed tab shows what is slowing your Mac down, and uninstalling an app removes its leftovers too. It idles at about 2% CPU and 40 MB of memory.
+
+<p align="center">
+  <img src="docs/screenshots/scan-results.png" alt="Review cleanup: every area found by a scan, with its size, what it is and a list of what gets deleted" width="900"><br>
+  <em>Scan results: tick what to remove and open “Show what gets deleted” to see every file and folder first.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/apps.png" alt="Applications: installed apps with search, uninstall and leftover removal" width="900"><br>
+  <em>Apps: search installed apps and uninstall them together with their leftovers.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/speed.png" alt="Speed: memory pressure, swap, uptime and the apps and tools using the most memory" width="900"><br>
+  <em>Speed: memory pressure, swap and the apps and tools using the most memory, each with Quit or Stop.</em>
+</p>
 
 ---
 
@@ -12,10 +27,10 @@ MacKitty is architected around **strict non-destructive safety principles**:
 | Safety Feature | How MacKitty Protects Your Mac |
 | :--- | :--- |
 | **Dry-Run Preview First** | Scanning only measures folders. **Zero files are removed** during a scan. |
-| **Review & Confirm** | Nothing is deleted automatically. You review every area, its path and size, and confirm before anything is removed. |
-| **Curated Safe Paths Only** | Cleanup is restricted to regenerable user caches (`~/Library/Caches`), developer artifacts (Xcode `DerivedData`, package-manager caches, and build output inside the code folders you choose) and logs (`~/Library/Logs`). Apple's own caches (`com.apple.*`, e.g. iCloud) and caches of apps that are currently running are always skipped. MacKitty **never touches `/System`, `/Library`, `/Applications`, or personal directories (Documents, Desktop, Downloads, Photos, iCloud)**. |
+| **Review & Confirm** | Nothing is deleted automatically. Every row shows what it is, its path and size, and a list of exactly which files and folders Clean will remove; untick anything you want to keep and confirm before anything is removed. |
+| **Curated Safe Paths Only** | Cleanup is restricted to regenerable user caches (`~/Library/Caches`), developer artifacts (Xcode `DerivedData`, package-manager caches, and build output inside the code folders you choose) and logs (`~/Library/Logs`). Apple's own caches (`com.apple.*`, e.g. iCloud) and caches of apps that are currently running are always skipped. MacKitty **never touches `/System` or personal directories (Documents, Desktop, Downloads, Photos, iCloud)**, and only removes an app from `/Applications` when you uninstall it. |
 | **Active App Lock Protection** | Automatically detects when browsers (Firefox, Chrome, Safari, Brave) or developer tools (Xcode) are open, warning you rather than attempting to purge locked databases or causing app crashes. |
-| **Standard User Privileges Only** | MacKitty runs entirely with your normal user permissions. It **never requests `sudo` or root permissions**, installs no persistent background daemons, and injects no kernel extensions. |
+| **Standard User Privileges** | MacKitty runs with your normal user permissions, installs no background daemons and loads no kernel extensions. It asks for your admin password only when you uninstall an app that left a launch daemon or privileged helper in `/Library`, using the standard macOS prompt. |
 | **Instant Cancellation** | Scans and cleanups can be cancelled at any moment; a cancelled run can never resume or apply stale results. |
 | **Verified Updates** | The updater only installs a build that is signed by MacKitty's Developer ID team, has the MacKitty bundle ID, passes Gatekeeper (notarized) and was downloaded from GitHub over HTTPS. |
 
